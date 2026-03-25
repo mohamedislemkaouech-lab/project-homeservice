@@ -1,0 +1,315 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ServicesDOM{% endblock %} - Plateforme de Services à Domicile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+    <style>
+    /* ── Chatbot floating widget ── */
+    #chatbot-toggle {
+        position: fixed;
+        bottom: 28px;
+        right: 28px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--color-primary, #1a73e8);
+        color: #fff;
+        border: none;
+        box-shadow: 0 4px 16px rgba(26,115,232,.45);
+        cursor: pointer;
+        z-index: 1050;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform .2s, box-shadow .2s;
+    }
+    #chatbot-toggle:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(26,115,232,.55); }
+
+    #chatbot-window {
+        position: fixed;
+        bottom: 96px;
+        right: 28px;
+        width: 360px;
+        max-height: 520px;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0,0,0,.18);
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        z-index: 1050;
+        transform-origin: bottom right;
+    }
+    #chatbot-window.chatbot-open {
+        animation: chatSlideUp .28s cubic-bezier(.22,.68,0,1.2) forwards;
+    }
+    #chatbot-window.chatbot-closed {
+        animation: chatSlideDown .22s ease-in forwards;
+    }
+    @keyframes chatSlideUp {
+        from { opacity: 0; transform: scale(.85) translateY(20px); }
+        to   { opacity: 1; transform: scale(1)  translateY(0); }
+    }
+    @keyframes chatSlideDown {
+        from { opacity: 1; transform: scale(1)  translateY(0); }
+        to   { opacity: 0; transform: scale(.85) translateY(20px); }
+    }
+
+    .chatbot-header {
+        background: var(--color-primary, #1a73e8);
+        color: #fff;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+    .chatbot-header button {
+        background: transparent;
+        border: none;
+        color: rgba(255,255,255,.8);
+        cursor: pointer;
+        font-size: 1rem;
+        line-height: 1;
+        padding: 0;
+    }
+    .chatbot-header button:hover { color: #fff; }
+
+    #chatbot-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background: #f4f7fb;
+    }
+
+    .chat-message { display: flex; }
+    .chat-message.user-message  { justify-content: flex-end; }
+    .chat-message.bot-message   { justify-content: flex-start; }
+
+    .bubble {
+        max-width: 78%;
+        padding: 10px 14px;
+        border-radius: 18px;
+        font-size: .9rem;
+        line-height: 1.5;
+        word-break: break-word;
+    }
+    .user-message .bubble {
+        background: var(--color-primary, #1a73e8);
+        color: #fff;
+        border-bottom-right-radius: 4px;
+    }
+    .bot-message .bubble {
+        background: #fff;
+        color: #333;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+    .bot-message.error .bubble { background: #fff3f3; color: #c0392b; }
+
+    /* Typing indicator – three bouncing dots */
+    .typing-dots { display: flex; align-items: center; gap: 5px; padding: 12px 14px; }
+    .typing-dots span {
+        width: 8px; height: 8px;
+        background: #aaa;
+        border-radius: 50%;
+        display: inline-block;
+        animation: dotBounce 1.2s infinite ease-in-out;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: .2s; }
+    .typing-dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes dotBounce {
+        0%,80%,100% { transform: translateY(0); }
+        40%          { transform: translateY(-8px); }
+    }
+
+    .chatbot-footer {
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+        padding: 10px 12px;
+        border-top: 1px solid #e8edf3;
+        background: #fff;
+        flex-shrink: 0;
+    }
+    #chatbot-input {
+        flex: 1;
+        resize: none;
+        border: 1px solid #dde3ea;
+        border-radius: 12px;
+        padding: 9px 12px;
+        font-size: .9rem;
+        outline: none;
+        max-height: 100px;
+        overflow-y: auto;
+        transition: border-color .2s;
+    }
+    #chatbot-input:focus { border-color: var(--color-primary, #1a73e8); }
+    #chatbot-send {
+        background: var(--color-primary, #1a73e8);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        padding: 9px 14px;
+        cursor: pointer;
+        transition: background .2s;
+        flex-shrink: 0;
+    }
+    #chatbot-send:hover { background: #1558c0; }
+    #chatbot-send:disabled { opacity: .5; cursor: default; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+        <div class="container">
+            <a class="navbar-brand position-relative" href="{% url 'home' %}" style="font-family: inherit; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 6px;">
+                <!-- Abstract Blob behind the name -->
+                <svg width="40" height="40" viewBox="0 0 100 100" fill="none" style="position: absolute; left: -5px; z-index: -1; opacity: 0.15; transform: scale(1.6) translateY(2px);">
+                    <circle cx="50" cy="50" r="40" fill="var(--color-primary)"/>
+                </svg>
+                <!-- ServicesDOM line logo -->
+                <svg width="32" height="32" viewBox="0 0 100 100" fill="none" stroke="var(--color-primary)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M 10,50 L 50,15 L 90,50" />
+                    <path d="M 20,40 L 20,85 L 80,85 L 80,40" />
+                    <path d="M 40,85 L 40,55 C 40,50 60,50 60,55 L 60,85" />
+                </svg>
+                <span style="color: var(--color-primary); z-index: 1;">servicesDOM</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'service_list' %}">Services</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav align-items-center">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'dashboard' %}">Tableau de bord</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                {{ user.get_full_name|default:user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="fas fa-user me-2"></i>Mon profil</a></li>
+                                {% if user.is_prestataire %}
+                                <li><a class="dropdown-item" href="{% url 'service_create' %}"><i class="fas fa-plus me-2"></i>Ajouter un service</a></li>
+                                <li><a class="dropdown-item" href="{% url 'manage_availability' %}"><i class="fas fa-calendar me-2"></i>Mes disponibilités</a></li>
+                                {% else %}
+                                <li><a class="dropdown-item" href="{% url 'my_reservations' %}"><i class="fas fa-calendar-check me-2"></i>Mes réservations</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Déconnexion</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Connexion / S'inscrire</a>
+                        </li>
+                        <li class="nav-item ms-2">
+                            <a class="btn btn-become-provider" href="{% url 'register_prestataire' %}">Devenir Prestataire</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-white mt-5 py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5 class="fw-bold mb-3">
+                        <img src="{% static 'images/logo.svg' %}" alt="Logo" width="30" height="30" style="filter: brightness(3);"> ServicesDOM
+                    </h5>
+                    <p style="color: rgba(255,255,255,0.6);">Plateforme de mise en relation pour services à domicile. Trouvez rapidement le professionnel qu'il vous faut.</p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5 class="fw-bold mb-3">Liens utiles</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{% url 'service_list' %}">Nos services</a></li>
+                        <li class="mb-2"><a href="{% url 'register_choice' %}">S'inscrire</a></li>
+                        <li class="mb-2"><a href="{% url 'register_prestataire' %}">Devenir prestataire</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5 class="fw-bold mb-3">Contact</h5>
+                    <ul class="list-unstyled" style="color: rgba(255,255,255,0.6);">
+                        <li class="mb-2"><i class="fas fa-envelope me-2"></i>contact@servicesdom.tn</li>
+                        <li class="mb-2"><i class="fas fa-phone me-2"></i>+216 XX XXX XXX</li>
+                        <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i>Tunis, Tunisie</li>
+                    </ul>
+                </div>
+            </div>
+            <hr style="border-color: rgba(255,255,255,0.15);">
+            <p class="text-center mb-0" style="color: rgba(255,255,255,0.5);">&copy; 2025 ServicesDOM - Projet PPG SESAME</p>
+        </div>
+    </footer>
+
+    <!-- Chatbot Widget -->
+    <!-- Floating toggle button (bottom-right corner) -->
+    <button id="chatbot-toggle" title="Assistant virtuel" aria-label="Ouvrir l'assistant">
+        <i class="fas fa-comments fa-lg"></i>
+    </button>
+
+    <!-- Chat window (hidden by default) -->
+    <div id="chatbot-window" class="d-none" role="dialog" aria-label="Assistant ServicesDOM">
+        <div class="chatbot-header">
+            <span><i class="fas fa-robot me-2"></i>Assistant ServicesDOM</span>
+            <button id="chatbot-close" aria-label="Fermer"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div id="chatbot-messages">
+            <div class="chat-message bot-message">
+                <div class="bubble">Bonjour ! Je suis l'assistant ServicesDOM. Comment puis-je vous aider ?</div>
+            </div>
+        </div>
+
+        <div class="chatbot-footer">
+            <textarea
+                id="chatbot-input"
+                rows="1"
+                placeholder="Tapez votre message… (Entrée pour envoyer)"
+                aria-label="Message"
+            ></textarea>
+            <button id="chatbot-send" aria-label="Envoyer"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/chatbot.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

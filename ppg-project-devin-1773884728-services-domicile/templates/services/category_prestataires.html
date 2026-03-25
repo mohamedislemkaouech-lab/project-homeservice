@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Prestataires - {{ category.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex align-items-center mb-4">
+        <a href="{% url 'home' %}" class="btn btn-outline-secondary me-3"><i class="fas fa-arrow-left"></i> Retour</a>
+        <h1 class="mb-0 text-primary fw-bold">Prestataires en {{ category.name }}</h1>
+    </div>
+    <p class="text-muted mb-5 fs-5">Trouvez le professionnel idéal pour vos besoins en {{ category.name|lower }}.</p>
+
+    <div class="row g-4">
+        {% for info in providers_info %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0" style="border-radius: 12px; transition: transform 0.2s;">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if info.provider.profile_picture %}
+                            <img src="{{ info.provider.profile_picture.url }}" alt="{{ info.provider.get_full_name }}" class="rounded-circle me-3" width="60" height="60" style="object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-circle me-3 d-flex align-items-center justify-content-center bg-primary text-white" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                                {{ info.provider.first_name|make_list|first|default:info.provider.username|make_list|first|upper }}
+                            </div>
+                        {% endif %}
+                        <div>
+                            <h5 class="card-title fw-bold mb-1">{{ info.provider.get_full_name|default:info.provider.username }}</h5>
+                            <p class="text-muted mb-0 small"><i class="fas fa-map-marker-alt text-danger me-1"></i> {{ info.city }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 d-flex align-items-center">
+                        <div class="text-warning me-2">
+                            <i class="fas fa-star"></i> <span class="fw-bold text-dark">{{ info.rating }}</span>
+                        </div>
+                        <span class="text-muted small">({{ info.reviews_count }} avis)</span>
+                    </div>
+
+                    <p class="card-text small text-muted text-truncate">{{ info.service.title }}</p>
+                    <p class="card-text fw-bold text-primary mb-4">À partir de {{ info.price }} DT</p>
+                    
+                    <a href="{% url 'service_detail' pk=info.service.pk %}" class="btn w-100 text-white" style="background-color: #1a73e8; border-radius: 8px;">Contacter</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="mb-3"><i class="fas fa-search fa-3x text-muted opacity-50"></i></div>
+            <h4 class="text-muted">Aucun prestataire disponible pour le moment.</h4>
+            <p>Revenez plus tard ou consultez d'autres catégories.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Accueil{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section"
+    style="background: #ffffff; position: relative; overflow: hidden; min-height: 520px; display: flex; align-items: center;">
+    <!-- Abstract Shapes matching image 2 -->
+    <!-- Top left dark green -->
+    <div
+        style="position: absolute; top: -100px; left: -100px; width: 350px; height: 350px; background-color: var(--color-primary); border-radius: 50%; opacity: 0.95; z-index: 0;">
+    </div>
+    <!-- Bottom left purple lines -->
+    <div
+        style="position: absolute; bottom: -50px; left: -50px; width: 250px; height: 250px; background: repeating-linear-gradient(45deg, transparent, transparent 4px, #5D5FEF 4px, #5D5FEF 5px); border-radius: 50%; opacity: 0.8; z-index: 0;">
+    </div>
+    <!-- Top right layered green blobs -->
+    <div
+        style="position: absolute; top: -120px; right: -50px; width: 550px; height: 380px; background-color: #2D9C8F; border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; z-index: 0;">
+    </div>
+    <div
+        style="position: absolute; top: -60px; right: -120px; width: 500px; height: 350px; background-color: #D3F26A; border-radius: 50% 50% 30% 70% / 50% 50% 70% 30%; z-index: 0; mix-blend-mode: multiply;">
+    </div>
+    <!-- Yellow circle -->
+    <div
+        style="position: absolute; top: 80px; right: 180px; width: 60px; height: 60px; border: 6px solid #F2A900; border-radius: 50%; z-index: 1;">
+    </div>
+    <!-- Dots grid bottom right -->
+    <div
+        style="position: absolute; bottom: 120px; right: 80px; width: 80px; height: 60px; background-image: radial-gradient(circle, var(--color-primary) 2px, transparent 2px); background-size: 15px 15px; z-index: 1;">
+    </div>
+
+
+
+    <div class="container position-relative" style="z-index: 2;">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center py-5">
+                <h1 style="font-size: 3.5rem; font-weight: 800; color: var(--color-primary); margin-bottom: 50px;">Book
+                    trusted help<br>for home tasks</h1>
+                <form action="{% url 'service_list' %}" method="GET" class="hero-search-form"
+                    style="max-width: 650px; margin: 0 auto; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-radius: 35px; background: white; padding: 6px; border: 1px solid #E8EBEA;">
+                    <div class="input-group" style="align-items: center;">
+                        <input type="text" name="q" class="form-control" placeholder="What do you need help with?"
+                            style="border: none; padding: 16px 20px; font-size: 1.05rem; box-shadow: none; border-radius: 30px; border-right: none; outline: none;">
+                        <button type="submit" class="btn"
+                            style="background-color: var(--color-primary); color: white; border-radius: 30px; padding: 12px 30px; margin-right: 4px; font-size: 1.2rem;">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Row (TaskRabbit style icons row) -->
+<section class="categories-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            {% for category in categories %}
+            <div class="col">
+                <a href="{% url 'category_services' pk=category.pk %}"
+                    class="category-icon-item category-tab-link" data-category-id="{{ category.pk }}">
+                    <i class="fas {{ category.icon|default:'fa-tools' }}"></i>
+                    <span>{{ category.name }}</span>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 col-6 stat-item mb-3">
+                <p>Services réalisés :</p>
+                <h3>2,500+</h3>
+            </div>
+            <div class="col-md-3 col-6 stat-item mb-3">
+                <p>Prestataires actifs :</p>
+                <h3>350+</h3>
+            </div>
+            <div class="col-md-3 col-6 stat-item mb-3">
+                <p>Clients satisfaits :</p>
+                <h3>1,800+</h3>
+            </div>
+            <div class="col-md-3 col-6 stat-item mb-3">
+                <p>Villes couvertes :</p>
+                <h3>24+</h3>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Dynamic Service Card Section -->
+<section id="dynamic-service-card" class="container mt-4 mb-5 d-none">
+    <div class="card shadow-sm border-0" style="border-radius: 16px; background-color: #f0f4f8; overflow: hidden;">
+        <div class="row g-0 align-items-center p-4">
+            <div class="col-md-5 text-center mb-4 mb-md-0">
+                <img id="service-card-image" src="" alt="Service Image" class="img-fluid rounded shadow" style="max-height: 280px; width: 100%; object-fit: cover; border-radius: 12px;">
+            </div>
+            <div class="col-md-7 ps-md-5">
+                <div class="card-body p-0">
+                    <h3 id="service-card-title" class="card-title fw-bold mb-3" style="color: #1a73e8; font-size: 2rem;"></h3>
+                    <p id="service-card-desc" class="card-text text-muted fs-5 mb-4" style="line-height: 1.6;"></p>
+                    <div>
+                        <a id="service-card-btn" href="#" class="btn btn-lg text-white px-4 py-2" style="background-color: #1a73e8; border-radius: 30px; font-weight: 600; box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3); transition: transform 0.2s, box-shadow 0.2s;">
+                            Voir les prestataires <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Popular Services (like Popular Projects) -->
+<section class="popular-section">
+    <div class="container">
+        <h2>Popular Projects</h2>
+        <div class="row g-4">
+            {% for service in featured_services %}
+            <div class="col-lg-3 col-md-4 col-6">
+                <a href="{% url 'service_detail' pk=service.pk %}" class="text-decoration-none">
+                    <div class="card h-100 service-card border-0 shadow-sm">
+                        {% if service.image %}
+                        <img src="{{ service.image.url }}" class="card-img-top" alt="{{ service.title }}"
+                            style="height: 200px; object-fit: cover;">
+                        {% else %}
+                        <div class="card-img-top d-flex align-items-center justify-content-center"
+                            style="height: 200px; background: linear-gradient(135deg, #E8F6F3, #B8E6C8);">
+                            <i class="fas {{ service.category.icon|default:'fa-tools' }} fa-3x"
+                                style="color: #1B4D3E;"></i>
+                        </div>
+                        {% endif %}
+                        <div class="card-body text-center">
+                            <h6 class="card-title mb-1">{{ service.title }}</h6>
+                            <small class="text-muted">À partir de {{ service.price }} DT</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-4">
+                <p class="text-muted">Aucun service disponible pour le moment. <a
+                        href="{% url 'register_prestataire' %}">Soyez le premier prestataire !</a></p>
+            </div>
+            {% endfor %}
+        </div>
+        {% if featured_services %}
+        <div class="text-center mt-4">
+            <a href="{% url 'service_list' %}" class="btn btn-outline-primary btn-lg px-5"
+                style="border-radius: 30px;">Voir tous les services</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Decorative corner -->
+    <div class="deco-corner-tr"></div>
+</section>
+
+<!-- How It Works -->
+<section class="how-section">
+    <div class="container">
+        <h2 class="text-center mb-5">Comment ça marche ?</h2>
+        <div class="row g-4 text-center">
+            <div class="col-md-3">
+                <div class="step-circle mx-auto mb-3">1</div>
+                <h5>Recherchez</h5>
+                <p class="text-muted">Trouvez le service dont vous avez besoin par catégorie ou localisation</p>
+            </div>
+            <div class="col-md-3">
+                <div class="step-circle mx-auto mb-3">2</div>
+                <h5>Comparez</h5>
+                <p class="text-muted">Consultez les profils, avis et tarifs des prestataires</p>
+            </div>
+            <div class="col-md-3">
+                <div class="step-circle mx-auto mb-3">3</div>
+                <h5>Réservez</h5>
+                <p class="text-muted">Choisissez un créneau et réservez en quelques clics</p>
+            </div>
+            <div class="col-md-3">
+                <div class="step-circle mx-auto mb-3">4</div>
+                <h5>Évaluez</h5>
+                <p class="text-muted">Laissez un avis après l'intervention pour aider la communauté</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Reviews Section (like TaskRabbit customer reviews) -->
+<section class="reviews-home-section">
+    <div class="container">
+        <h2>See what happy customers are saying about servicesDOM</h2>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="review-home-card">
+                    <span class="reviewer-name">Sami B.</span>
+                    <span class="stars ms-2">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                            class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </span>
+                    <p class="review-text">Un plombier est venu chez moi en moins de 2 heures. Travail rapide et
+                        professionnel. Je recommande vivement cette plateforme !</p>
+                    <a href="{% url 'service_list' %}?category=1" class="review-service-link">Plomberie</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="review-home-card">
+                    <span class="reviewer-name">Fatma K.</span>
+                    <span class="stars ms-2">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                            class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </span>
+                    <p class="review-text">J'ai trouvé une baby-sitter formidable grâce à ServicesDOM. Elle est
+                        ponctuelle, douce et mes enfants l'adorent !</p>
+                    <a href="{% url 'service_list' %}?category=4" class="review-service-link">Baby-sitting</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="review-home-card">
+                    <span class="reviewer-name">Ahmed M.</span>
+                    <span class="stars ms-2">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                            class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </span>
+                    <p class="review-text">Excellent service de ménage. La maison est impeccable et le tarif est très
+                        raisonnable. Merci ServicesDOM !</p>
+                    <a href="{% url 'service_list' %}?category=3" class="review-service-link">Ménage</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Decorative corner -->
+    <div class="deco-corner-bl"></div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section text-center">
+    <div class="container">
+        <h2 class="fw-bold mb-3">Vous êtes professionnel ?</h2>
+        <p class="lead mb-4">Rejoignez notre plateforme et développez votre clientèle</p>
+        <a href="{% url 'register_prestataire' %}" class="btn btn-cta">
+            <i class="fas fa-user-plus me-2"></i>Inscrivez-vous gratuitement
+        </a>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const tabs = document.querySelectorAll(".category-tab-link");
+    const serviceCard = document.getElementById("dynamic-service-card");
+    const cardTitle = document.getElementById("service-card-title");
+    const cardDesc = document.getElementById("service-card-desc");
+    const cardImg = document.getElementById("service-card-image");
+    const cardBtn = document.getElementById("service-card-btn");
+
+    function fetchCategoryData(categoryId, tabElement) {
+        // Minimal visual reset for tabs
+        tabs.forEach(t => {
+            t.classList.remove("active");
+            t.style.borderBottomColor = "transparent";
+            t.style.color = "var(--color-text-muted)";
+            let icon = t.querySelector('i');
+            if(icon) icon.style.color = "#6c757d";
+        });
+
+        // Set active state styling for clicked tab
+        tabElement.classList.add("active");
+        tabElement.style.borderBottomColor = "#1a73e8";
+        tabElement.style.color = "#1a73e8";
+        let icon = tabElement.querySelector('i');
+        if(icon) icon.style.color = "#1a73e8";
+
+        // Fetch JSON data for the category
+        fetch(`/services/category/${categoryId}/api/`)
+            .then(response => {
+                if(!response.ok) throw new Error("Network response was not ok");
+                return response.json();
+            })
+            .then(data => {
+                // Update card content
+                cardTitle.textContent = data.name;
+                cardDesc.textContent = data.description;
+                cardImg.src = data.image_url;
+                cardImg.alt = `Illustration pour ${data.name}`;
+                cardBtn.href = `/services/category/${data.id}/prestataires/`;
+                
+                // Show card with a small fade-in effect
+                serviceCard.classList.remove("d-none");
+                serviceCard.style.opacity = 0;
+                setTimeout(() => {
+                    serviceCard.style.transition = "opacity 0.4s ease-in-out";
+                    serviceCard.style.opacity = 1;
+                }, 50);
+            })
+            .catch(error => {
+                console.error("Erreur lors de la récupération des données de catégorie:", error);
+            });
+    }
+
+    // Attach click events
+    tabs.forEach(tab => {
+        tab.addEventListener("click", function(e) {
+            e.preventDefault();
+            const categoryId = this.getAttribute("data-category-id");
+            fetchCategoryData(categoryId, this);
+        });
+    });
+
+    // Automatically load the first category tab on page load
+    if(tabs.length > 0) {
+        const firstTab = tabs[0];
+        const categoryId = firstTab.getAttribute("data-category-id");
+        fetchCategoryData(categoryId, firstTab);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Réservation #{{ reservation.pk }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Réservation #{{ reservation.pk }}</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Service</h6>
+                            <p><a href="{% url 'service_detail' pk=reservation.service.pk %}">{{ reservation.service.title }}</a></p>
+
+                            <h6 class="fw-bold">Prestataire</h6>
+                            <p><a href="{% url 'provider_profile' pk=reservation.service.provider.pk %}">{{ reservation.service.provider.get_full_name }}</a></p>
+
+                            <h6 class="fw-bold">Client</h6>
+                            <p>{{ reservation.client.get_full_name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Date</h6>
+                            <p>{{ reservation.date|date:"d/m/Y" }}</p>
+
+                            <h6 class="fw-bold">Heure</h6>
+                            <p>{{ reservation.time_slot|time:"H:i" }}</p>
+
+                            <h6 class="fw-bold">Statut</h6>
+                            <span class="badge bg-{% if reservation.status == 'pending' %}warning{% elif reservation.status == 'accepted' %}primary{% elif reservation.status == 'completed' %}success{% elif reservation.status == 'rejected' %}danger{% else %}secondary{% endif %} fs-6">
+                                {{ reservation.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {% if reservation.notes %}
+                    <hr>
+                    <h6 class="fw-bold">Notes</h6>
+                    <p>{{ reservation.notes }}</p>
+                    {% endif %}
+
+                    {% if reservation.address %}
+                    <h6 class="fw-bold">Adresse d'intervention</h6>
+                    <p>{{ reservation.address }}</p>
+                    {% endif %}
+
+                    <hr>
+                    <div class="d-flex gap-2">
+                        {% if user == reservation.service.provider %}
+                            {% if reservation.status == 'pending' %}
+                                <a href="{% url 'update_reservation_status' pk=reservation.pk status='accepted' %}" class="btn btn-success"><i class="fas fa-check me-1"></i>Accepter</a>
+                                <a href="{% url 'update_reservation_status' pk=reservation.pk status='rejected' %}" class="btn btn-danger"><i class="fas fa-times me-1"></i>Refuser</a>
+                            {% elif reservation.status == 'accepted' %}
+                                <a href="{% url 'update_reservation_status' pk=reservation.pk status='completed' %}" class="btn btn-success"><i class="fas fa-flag-checkered me-1"></i>Marquer comme terminée</a>
+                            {% endif %}
+                        {% endif %}
+                        {% if user == reservation.client and reservation.status == 'pending' %}
+                            <a href="{% url 'cancel_reservation' pk=reservation.pk %}" class="btn btn-danger"><i class="fas fa-times me-1"></i>Annuler</a>
+                        {% endif %}
+                        {% if user == reservation.client and reservation.status == 'completed' and not reservation.review %}
+                            <a href="{% url 'create_review' reservation_pk=reservation.pk %}" class="btn btn-warning"><i class="fas fa-star me-1"></i>Laisser un avis</a>
+                        {% endif %}
+                        <a href="{% url 'dashboard' %}" class="btn btn-secondary">Retour</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

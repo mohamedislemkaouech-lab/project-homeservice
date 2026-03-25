@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Laisser un avis{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <h3 class="mb-4"><i class="fas fa-star text-warning me-2"></i>Laisser un avis</h3>
+
+                    <div class="alert alert-info">
+                        <strong>Service :</strong> {{ reservation.service.title }}<br>
+                        <strong>Prestataire :</strong> {{ reservation.service.provider.get_full_name }}<br>
+                        <strong>Date :</strong> {{ reservation.date|date:"d/m/Y" }}
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Note (1-5 étoiles)</label>
+                            <div id="star-rating" class="mb-2">
+                                {% for i in "12345" %}
+                                <i class="far fa-star fa-2x text-warning star-btn" data-value="{{ forloop.counter }}" style="cursor: pointer;"></i>
+                                {% endfor %}
+                            </div>
+                            {{ form.rating }}
+                            {% for error in form.rating.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.comment.id_for_label }}" class="form-label fw-semibold">Commentaire</label>
+                            {{ form.comment }}
+                            {% for error in form.comment.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-warning"><i class="fas fa-paper-plane me-1"></i>Soumettre l'avis</button>
+                            <a href="{% url 'my_reservations' %}" class="btn btn-secondary">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('.star-btn');
+    const ratingInput = document.getElementById('id_rating');
+
+    stars.forEach(function(star) {
+        star.addEventListener('click', function() {
+            const value = this.getAttribute('data-value');
+            ratingInput.value = value;
+            stars.forEach(function(s, index) {
+                if (index < value) {
+                    s.classList.remove('far');
+                    s.classList.add('fas');
+                } else {
+                    s.classList.remove('fas');
+                    s.classList.add('far');
+                }
+            });
+        });
+
+        star.addEventListener('mouseover', function() {
+            const value = this.getAttribute('data-value');
+            stars.forEach(function(s, index) {
+                if (index < value) {
+                    s.classList.add('text-warning-hover');
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

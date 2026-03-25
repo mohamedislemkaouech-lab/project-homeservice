@@ -1,0 +1,203 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.db.models import Q
+from django.http import JsonResponse
+from .models import Service, Category, Availability
+from .forms import ServiceForm, AvailabilityForm
+from accounts.models import User
+
+
+def category_api(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    # Use category image if available, else a stylized stock photo URL
+    if category.image:
+        image_url = category.image.url
+    else:
+        image_url = f"https://source.unsplash.com/600x400/?{category.name.lower().replace(' ', ',')},service"
+    
+    desc = category.description
+    if not desc:
+        desc = f"Découvrez nos professionnels qualifiés pour vos besoins en {category.name.lower()}. Des experts de confiance, sélectionnés pour vous offrir un service de qualité à domicile."
+        
+    return JsonResponse({
+        'id': category.id,
+        'name': category.name,
+        'description': desc,
+        'image_url': image_url,
+    })
+
+
+def category_prestataires(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    # Get all active services in this category
+    services = Service.objects.filter(category=category, is_active=True).select_related('provider')
+    
+    # Extract unique providers
+    providers_dict = {}
+    for service in services:
+        provider = service.provider
+        if provider.id not in providers_dict:
+            providers_dict[provider.id] = {
+                'provider': provider,
+                'service': service,
+                'price': service.price,
+                'city': service.city,
+                'rating': service.average_rating,
+                'reviews_count': service.total_reviews,
+            }
+            
+    # Sort providers by rating descending
+    providers_info = sorted(list(providers_dict.values()), key=lambda x: x['rating'], reverse=True)
+    
+    return render(request, 'services/category_prestataires.html', {
+        'category': category,
+        'providers_info': providers_info,
+    })
+
+
+def service_list(request):
+    services = Service.objects.filter(is_active=True)
+    categories = Category.objects.all()
+
+    query = request.GET.get('q', '')
+    category_id = request.GET.get('category', '')
+    city = request.GET.get('city', '')
+    min_price = request.GET.get('min_price', '')
+    max_price = request.GET.get('max_price', '')
+    sort = request.GET.get('sort', '')
+
+    if query:
+        services = services.filter(
+            Q(title__icontains=query) |
+            Q(description__icontains=query) |
+            Q(provider__first_name__icontains=query) |
+            Q(provider__last_name__icontains=query)
+        )
+    if category_id:
+        services = services.filter(category_id=category_id)
+    if city:
+        services = services.filter(city__icontains=city)
+    if min_price:
+        services = services.filter(price__gte=min_price)
+    if max_price:
+        services = services.filter(price__lte=max_price)
+
+    if sort == 'price_asc':
+        services = services.order_by('price')
+    elif sort == 'price_desc':
+        services = services.order_by('-price')
+    elif sort == 'newest':
+        services = services.order_by('-created_at')
+
+    return render(request, 'services/service_list.html', {
+        'services': services,
+        'categories': categories,
+        'query': query,
+        'selected_category': category_id,
+        'city': city,
+        'min_price': min_price,
+        'max_price': max_price,
+        'sort': sort,
+    })
+
+
+def service_detail(request, pk):
+    service = get_object_or_404(Service, pk=pk)
+    from reviews.models import Review
+    reviews = Review.objects.filter(reservation__service=service)
+    availabilities = Availability.objects.filter(provider=service.provider, is_available=True)
+    related_services = Service.objects.filter(
+        category=service.category, is_active=True
+    ).exclude(pk=service.pk)[:4]
+    return render(request, 'services/service_detail.html', {
+        'service': service,
+        'reviews': reviews,
+        'availabilities': availabilities,
+        'related_services': related_services,
+    })
+
+
+def category_services(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    services = Service.objects.filter(category=category, is_active=True)
+    return render(request, 'services/category_services.html', {
+        'category': category,
+        'services': services,
+    })
+
+
+@login_required
+def service_create(request):
+    if not request.user.is_prestataire:
+        messages.error(request, "Seuls les prestataires peuvent créer des services.")
+        return redirect('home')
+
+    if request.method == 'POST':
+        form = ServiceForm(request.POST, request.FILES)
+        if form.is_valid():
+            service = form.save(commit=False)
+            service.provider = request.user
+            service.save()
+            messages.success(request, 'Service créé avec succès !')
+            return redirect('service_detail', pk=service.pk)
+    else:
+        form = ServiceForm()
+    return render(request, 'services/service_form.html', {'form': form, 'title': 'Créer un service'})
+
+
+@login_required
+def service_edit(request, pk):
+    service = get_object_or_404(Service, pk=pk, provider=request.user)
+    if request.method == 'POST':
+        form = ServiceForm(request.POST, request.FILES, instance=service)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Service mis à jour !')
+            return redirect('service_detail', pk=service.pk)
+    else:
+        form = ServiceForm(instance=service)
+    return render(request, 'services/service_form.html', {'form': form, 'title': 'Modifier le service'})
+
+
+@login_required
+def service_delete(request, pk):
+    service = get_object_or_404(Service, pk=pk, provider=request.user)
+    if request.method == 'POST':
+        service.delete()
+        messages.success(request, 'Service supprimé.')
+        return redirect('dashboard')
+    return render(request, 'services/service_delete.html', {'service': service})
+
+
+@login_required
+def manage_availability(request):
+    if not request.user.is_prestataire:
+        messages.error(request, "Accès réservé aux prestataires.")
+        return redirect('home')
+
+    availabilities = Availability.objects.filter(provider=request.user)
+
+    if request.method == 'POST':
+        form = AvailabilityForm(request.POST)
+        if form.is_valid():
+            availability = form.save(commit=False)
+            availability.provider = request.user
+            availability.save()
+            messages.success(request, 'Disponibilité ajoutée !')
+            return redirect('manage_availability')
+    else:
+        form = AvailabilityForm()
+
+    return render(request, 'services/manage_availability.html', {
+        'availabilities': availabilities,
+        'form': form,
+    })
+
+
+@login_required
+def delete_availability(request, pk):
+    availability = get_object_or_404(Availability, pk=pk, provider=request.user)
+    availability.delete()
+    messages.success(request, 'Disponibilité supprimée.')
+    return redirect('manage_availability')

@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ provider.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    {% if provider.profile_image %}
+                        <img src="{{ provider.profile_image.url }}" class="rounded-circle mb-3" width="150" height="150" style="object-fit: cover;">
+                    {% else %}
+                        <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 150px; height: 150px;">
+                            <i class="fas fa-hard-hat fa-4x text-white"></i>
+                        </div>
+                    {% endif %}
+                    <h4>{{ provider.get_full_name }}</h4>
+                    <span class="badge bg-success mb-2">Prestataire</span>
+                    <div class="text-warning mb-2">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= provider.average_rating %}
+                                <i class="fas fa-star"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                        <small class="text-muted">({{ provider.total_reviews }} avis)</small>
+                    </div>
+                    <ul class="list-unstyled text-start mt-3">
+                        {% if provider.city %}<li class="mb-2"><i class="fas fa-map-marker-alt text-primary me-2"></i>{{ provider.city }}</li>{% endif %}
+                        {% if provider.phone %}<li class="mb-2"><i class="fas fa-phone text-primary me-2"></i>{{ provider.phone }}</li>{% endif %}
+                        {% if provider.email %}<li class="mb-2"><i class="fas fa-envelope text-primary me-2"></i>{{ provider.email }}</li>{% endif %}
+                    </ul>
+                    {% if provider.bio %}
+                    <hr>
+                    <p class="text-muted text-start">{{ provider.bio }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <h4 class="fw-bold mb-3">Services proposés</h4>
+            <div class="row g-3">
+                {% for service in services %}
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <span class="badge bg-primary mb-2">{{ service.category.name }}</span>
+                            <h5>{{ service.title }}</h5>
+                            <p class="text-muted small">{{ service.description|truncatewords:15 }}</p>
+                            <p class="fw-bold text-primary">{{ service.price }} DT/{{ service.get_price_unit_display }}</p>
+                            <a href="{% url 'service_detail' pk=service.pk %}" class="btn btn-outline-primary btn-sm">Voir détails</a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted">Aucun service disponible.</p>
+                {% endfor %}
+            </div>
+
+            {% if reviews %}
+            <h4 class="fw-bold mt-4 mb-3">Avis des clients</h4>
+            {% for review in reviews %}
+            <div class="card mb-2 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ review.client.get_full_name }}</strong>
+                        <span class="text-warning">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= review.rating %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+                            {% endfor %}
+                        </span>
+                    </div>
+                    <p class="text-muted mb-0 mt-1">{{ review.comment }}</p>
+                    <small class="text-muted">{{ review.created_at|date:"d/m/Y" }}</small>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

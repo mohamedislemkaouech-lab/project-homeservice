@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Mon Profil{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    {% if profile_user.profile_image %}
+                        <img src="{{ profile_user.profile_image.url }}" class="rounded-circle mb-3" width="150" height="150" style="object-fit: cover;">
+                    {% else %}
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 150px; height: 150px;">
+                            <i class="fas fa-user fa-4x text-white"></i>
+                        </div>
+                    {% endif %}
+                    <h4>{{ profile_user.get_full_name }}</h4>
+                    <span class="badge bg-{% if profile_user.is_prestataire %}success{% else %}primary{% endif %} mb-2">
+                        {{ profile_user.get_role_display }}
+                    </span>
+                    {% if profile_user.is_prestataire %}
+                    <div class="text-warning mb-2">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= profile_user.average_rating %}
+                                <i class="fas fa-star"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                        <small class="text-muted">({{ profile_user.total_reviews }} avis)</small>
+                    </div>
+                    {% endif %}
+                    <a href="{% url 'profile_edit' %}" class="btn btn-outline-primary mt-2">
+                        <i class="fas fa-edit me-1"></i>Modifier le profil
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Informations personnelles</h5>
+                    <table class="table">
+                        <tr><th><i class="fas fa-envelope me-2"></i>Email</th><td>{{ profile_user.email }}</td></tr>
+                        <tr><th><i class="fas fa-phone me-2"></i>Téléphone</th><td>{{ profile_user.phone|default:"Non renseigné" }}</td></tr>
+                        <tr><th><i class="fas fa-map-marker-alt me-2"></i>Ville</th><td>{{ profile_user.city|default:"Non renseignée" }}</td></tr>
+                        <tr><th><i class="fas fa-home me-2"></i>Adresse</th><td>{{ profile_user.address|default:"Non renseignée" }}</td></tr>
+                        {% if profile_user.bio %}
+                        <tr><th><i class="fas fa-info-circle me-2"></i>Bio</th><td>{{ profile_user.bio }}</td></tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

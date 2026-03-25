@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord Client{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="fw-bold mb-4"><i class="fas fa-tachometer-alt text-primary me-2"></i>Mes réservations</h2>
+
+    <a href="{% url 'service_list' %}" class="btn btn-primary mb-4"><i class="fas fa-search me-1"></i>Chercher un service</a>
+
+    {% if reservations %}
+    <div class="table-responsive">
+        <table class="table table-hover shadow-sm">
+            <thead class="table-primary">
+                <tr>
+                    <th>#</th>
+                    <th>Service</th>
+                    <th>Prestataire</th>
+                    <th>Date</th>
+                    <th>Heure</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reservations %}
+                <tr>
+                    <td>{{ r.pk }}</td>
+                    <td>{{ r.service.title }}</td>
+                    <td>
+                        <a href="{% url 'provider_profile' pk=r.service.provider.pk %}">{{ r.service.provider.get_full_name }}</a>
+                    </td>
+                    <td>{{ r.date|date:"d/m/Y" }}</td>
+                    <td>{{ r.time_slot|time:"H:i" }}</td>
+                    <td>
+                        <span class="badge bg-{% if r.status == 'pending' %}warning{% elif r.status == 'accepted' %}primary{% elif r.status == 'completed' %}success{% elif r.status == 'rejected' %}danger{% else %}secondary{% endif %}">
+                            {{ r.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'reservation_detail' pk=r.pk %}" class="btn btn-outline-primary btn-sm"><i class="fas fa-eye"></i></a>
+                        {% if r.status == 'pending' %}
+                            <a href="{% url 'cancel_reservation' pk=r.pk %}" class="btn btn-outline-danger btn-sm"><i class="fas fa-times"></i> Annuler</a>
+                        {% endif %}
+                        {% if r.status == 'completed' and not r.review %}
+                            <a href="{% url 'create_review' reservation_pk=r.pk %}" class="btn btn-outline-warning btn-sm"><i class="fas fa-star"></i> Avis</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+        <h4 class="text-muted">Aucune réservation</h4>
+        <p class="text-muted">Commencez par rechercher un service à domicile !</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

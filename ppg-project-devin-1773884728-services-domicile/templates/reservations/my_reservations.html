@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes réservations{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="fw-bold mb-4"><i class="fas fa-calendar-check text-primary me-2"></i>Mes réservations</h2>
+
+    {% if reservations %}
+    <div class="row g-3">
+        {% for r in reservations %}
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="card-title">{{ r.service.title }}</h5>
+                        <span class="badge bg-{% if r.status == 'pending' %}warning{% elif r.status == 'accepted' %}primary{% elif r.status == 'completed' %}success{% elif r.status == 'rejected' %}danger{% else %}secondary{% endif %}">
+                            {{ r.get_status_display }}
+                        </span>
+                    </div>
+                    <p class="text-muted mb-1"><i class="fas fa-user me-1"></i>{{ r.service.provider.get_full_name }}</p>
+                    <p class="text-muted mb-1"><i class="fas fa-calendar me-1"></i>{{ r.date|date:"d/m/Y" }} à {{ r.time_slot|time:"H:i" }}</p>
+                    {% if r.notes %}<p class="text-muted small mb-1"><i class="fas fa-sticky-note me-1"></i>{{ r.notes|truncatewords:15 }}</p>{% endif %}
+                    <div class="mt-2">
+                        <a href="{% url 'reservation_detail' pk=r.pk %}" class="btn btn-outline-primary btn-sm"><i class="fas fa-eye me-1"></i>Détails</a>
+                        {% if r.status == 'pending' %}
+                            <a href="{% url 'cancel_reservation' pk=r.pk %}" class="btn btn-outline-danger btn-sm"><i class="fas fa-times me-1"></i>Annuler</a>
+                        {% endif %}
+                        {% if r.status == 'completed' and not r.review %}
+                            <a href="{% url 'create_review' reservation_pk=r.pk %}" class="btn btn-outline-warning btn-sm"><i class="fas fa-star me-1"></i>Laisser un avis</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+        <h4 class="text-muted">Aucune réservation</h4>
+        <a href="{% url 'service_list' %}" class="btn btn-primary mt-3"><i class="fas fa-search me-1"></i>Chercher un service</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

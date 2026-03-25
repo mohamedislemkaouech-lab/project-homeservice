@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord Prestataire{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="fw-bold mb-4"><i class="fas fa-tachometer-alt text-primary me-2"></i>Tableau de bord</h2>
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-warning text-white shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-clock fa-2x mb-2"></i>
+                    <h3>{{ pending_reservations.count }}</h3>
+                    <p class="mb-0">En attente</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <h3>{{ active_reservations.count }}</h3>
+                    <p class="mb-0">Acceptées</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-flag-checkered fa-2x mb-2"></i>
+                    <h3>{{ completed_reservations.count }}</h3>
+                    <p class="mb-0">Terminées</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-tools fa-2x mb-2"></i>
+                    <h3>{{ services.count }}</h3>
+                    <p class="mb-0">Mes services</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mb-4">
+        <a href="{% url 'service_create' %}" class="btn btn-primary me-2"><i class="fas fa-plus me-1"></i>Ajouter un service</a>
+        <a href="{% url 'manage_availability' %}" class="btn btn-outline-primary"><i class="fas fa-calendar me-1"></i>Gérer mes disponibilités</a>
+    </div>
+
+    <!-- Pending Reservations -->
+    {% if pending_reservations %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-warning text-white fw-bold">
+            <i class="fas fa-clock me-2"></i>Réservations en attente
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Client</th>
+                            <th>Service</th>
+                            <th>Date</th>
+                            <th>Heure</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in pending_reservations %}
+                        <tr>
+                            <td>{{ r.pk }}</td>
+                            <td>{{ r.client.get_full_name }}</td>
+                            <td>{{ r.service.title }}</td>
+                            <td>{{ r.date|date:"d/m/Y" }}</td>
+                            <td>{{ r.time_slot|time:"H:i" }}</td>
+                            <td>
+                                <a href="{% url 'update_reservation_status' pk=r.pk status='accepted' %}" class="btn btn-success btn-sm"><i class="fas fa-check"></i> Accepter</a>
+                                <a href="{% url 'update_reservation_status' pk=r.pk status='rejected' %}" class="btn btn-danger btn-sm"><i class="fas fa-times"></i> Refuser</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Active Reservations -->
+    {% if active_reservations %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white fw-bold">
+            <i class="fas fa-check-circle me-2"></i>Réservations acceptées
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Client</th>
+                            <th>Service</th>
+                            <th>Date</th>
+                            <th>Heure</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in active_reservations %}
+                        <tr>
+                            <td>{{ r.pk }}</td>
+                            <td>{{ r.client.get_full_name }}</td>
+                            <td>{{ r.service.title }}</td>
+                            <td>{{ r.date|date:"d/m/Y" }}</td>
+                            <td>{{ r.time_slot|time:"H:i" }}</td>
+                            <td>
+                                <a href="{% url 'update_reservation_status' pk=r.pk status='completed' %}" class="btn btn-success btn-sm"><i class="fas fa-flag-checkered"></i> Terminer</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- My Services -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-info text-white fw-bold">
+            <i class="fas fa-tools me-2"></i>Mes services
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Titre</th>
+                            <th>Catégorie</th>
+                            <th>Prix</th>
+                            <th>Ville</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in services %}
+                        <tr>
+                            <td>{{ s.title }}</td>
+                            <td>{{ s.category.name }}</td>
+                            <td>{{ s.price }} DT/{{ s.get_price_unit_display }}</td>
+                            <td>{{ s.city }}</td>
+                            <td><span class="badge bg-{% if s.is_active %}success{% else %}secondary{% endif %}">{% if s.is_active %}Actif{% else %}Inactif{% endif %}</span></td>
+                            <td>
+                                <a href="{% url 'service_edit' pk=s.pk %}" class="btn btn-outline-primary btn-sm"><i class="fas fa-edit"></i></a>
+                                <a href="{% url 'service_delete' pk=s.pk %}" class="btn btn-outline-danger btn-sm"><i class="fas fa-trash"></i></a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center text-muted">Aucun service créé.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
