@@ -18,15 +18,52 @@
 
                     <form method="POST">
                         {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Note (1-5 étoiles)</label>
-                            <div id="star-rating" class="mb-2">
-                                {% for i in "12345" %}
-                                <i class="far fa-star fa-2x text-warning star-btn" data-value="{{ forloop.counter }}" style="cursor: pointer;"></i>
-                                {% endfor %}
+                        <div class="mb-4">
+                            <h5 class="fw-bold mb-3 border-bottom pb-2">Évaluation détaillée</h5>
+                            
+                            <div class="row align-items-center mb-2">
+                                <div class="col-sm-5 fw-semibold text-secondary">Ponctualité</div>
+                                <div class="col-sm-7" id="star-rating_punctuality">
+                                    {% for i in "12345" %}
+                                    <i class="far fa-star text-warning star-btn fa-lg" data-field="rating_punctuality" data-value="{{ forloop.counter }}" style="cursor: pointer;"></i>
+                                    {% endfor %}
+                                    {{ form.rating_punctuality.as_hidden }}
+                                    {% for error in form.rating_punctuality.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                                </div>
                             </div>
-                            {{ form.rating }}
-                            {% for error in form.rating.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            
+                            <div class="row align-items-center mb-2">
+                                <div class="col-sm-5 fw-semibold text-secondary">Qualité du travail</div>
+                                <div class="col-sm-7" id="star-rating_quality">
+                                    {% for i in "12345" %}
+                                    <i class="far fa-star text-warning star-btn fa-lg" data-field="rating_quality" data-value="{{ forloop.counter }}" style="cursor: pointer;"></i>
+                                    {% endfor %}
+                                    {{ form.rating_quality.as_hidden }}
+                                    {% for error in form.rating_quality.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                                </div>
+                            </div>
+                            
+                            <div class="row align-items-center mb-2">
+                                <div class="col-sm-5 fw-semibold text-secondary">Communication</div>
+                                <div class="col-sm-7" id="star-rating_communication">
+                                    {% for i in "12345" %}
+                                    <i class="far fa-star text-warning star-btn fa-lg" data-field="rating_communication" data-value="{{ forloop.counter }}" style="cursor: pointer;"></i>
+                                    {% endfor %}
+                                    {{ form.rating_communication.as_hidden }}
+                                    {% for error in form.rating_communication.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                                </div>
+                            </div>
+                            
+                            <div class="row align-items-center mb-2">
+                                <div class="col-sm-5 fw-semibold text-secondary">Rapport Qualité/Prix</div>
+                                <div class="col-sm-7" id="star-rating_value">
+                                    {% for i in "12345" %}
+                                    <i class="far fa-star text-warning star-btn fa-lg" data-field="rating_value" data-value="{{ forloop.counter }}" style="cursor: pointer;"></i>
+                                    {% endfor %}
+                                    {{ form.rating_value.as_hidden }}
+                                    {% for error in form.rating_value.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                                </div>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="{{ form.comment.id_for_label }}" class="form-label fw-semibold">Commentaire</label>
@@ -49,30 +86,39 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const stars = document.querySelectorAll('.star-btn');
-    const ratingInput = document.getElementById('id_rating');
+    
+    // Initialiser à 5 étoiles par défaut
+    const fields = ['rating_punctuality', 'rating_quality', 'rating_communication', 'rating_value'];
+    fields.forEach(fieldName => {
+        const input = document.getElementById('id_' + fieldName);
+        if(input) {
+            if(!input.value) input.value = 5;
+            updateStars(fieldName, input.value);
+        }
+    });
+
+    function updateStars(fieldName, value) {
+        const fieldStars = document.querySelectorAll(`.star-btn[data-field="${fieldName}"]`);
+        fieldStars.forEach(function(s, index) {
+            if (index < value) {
+                s.classList.remove('far');
+                s.classList.add('fas');
+            } else {
+                s.classList.remove('fas');
+                s.classList.add('far');
+            }
+        });
+    }
 
     stars.forEach(function(star) {
         star.addEventListener('click', function() {
             const value = this.getAttribute('data-value');
-            ratingInput.value = value;
-            stars.forEach(function(s, index) {
-                if (index < value) {
-                    s.classList.remove('far');
-                    s.classList.add('fas');
-                } else {
-                    s.classList.remove('fas');
-                    s.classList.add('far');
-                }
-            });
-        });
-
-        star.addEventListener('mouseover', function() {
-            const value = this.getAttribute('data-value');
-            stars.forEach(function(s, index) {
-                if (index < value) {
-                    s.classList.add('text-warning-hover');
-                }
-            });
+            const fieldName = this.getAttribute('data-field');
+            const input = document.getElementById('id_' + fieldName);
+            if(input) {
+                input.value = value;
+                updateStars(fieldName, value);
+            }
         });
     });
 });

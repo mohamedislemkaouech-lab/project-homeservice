@@ -34,7 +34,10 @@ def create_reservation(request, service_pk):
 
 @login_required
 def my_reservations(request):
-    reservations = Reservation.objects.filter(client=request.user)
+    if request.user.is_admin:
+        reservations = Reservation.objects.all().order_by('-created_at')
+    else:
+        reservations = Reservation.objects.filter(client=request.user).order_by('-created_at')
     return render(request, 'reservations/my_reservations.html', {
         'reservations': reservations,
     })
@@ -43,7 +46,7 @@ def my_reservations(request):
 @login_required
 def reservation_detail(request, pk):
     reservation = get_object_or_404(Reservation, pk=pk)
-    if reservation.client != request.user and reservation.service.provider != request.user:
+    if not request.user.is_admin and reservation.client != request.user and reservation.service.provider != request.user:
         messages.error(request, "Accès non autorisé.")
         return redirect('home')
     return render(request, 'reservations/reservation_detail.html', {

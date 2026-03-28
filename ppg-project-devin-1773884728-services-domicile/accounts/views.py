@@ -37,11 +37,11 @@ def register_client(request):
 
 def register_prestataire(request):
     if request.method == 'POST':
-        form = PrestataireRegistrationForm(request.POST)
+        form = PrestataireRegistrationForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, 'Compte prestataire créé avec succès !')
+            messages.success(request, 'Compte prestataire créé avec succès ! Votre pièce d\'identité est en cours de vérification.')
             return redirect('home')
     else:
         form = PrestataireRegistrationForm()
@@ -117,9 +117,33 @@ def dashboard(request):
             'active_reservations': active_reservations,
             'completed_reservations': completed_reservations,
         })
+    elif request.user.is_admin:
+        from reservations.models import Reservation
+        reservations = Reservation.objects.all().order_by('-created_at')
+        pending_providers = User.objects.filter(role='prestataire', verification_status='pending')
+        return render(request, 'accounts/dashboard_client.html', {
+            'reservations': reservations,
+            'pending_providers': pending_providers,
+            'is_admin_view': True,
+        })
     else:
         from reservations.models import Reservation
-        reservations = Reservation.objects.filter(client=request.user)
+        reservations = Reservation.objects.filter(client=request.user).order_by('-created_at')
         return render(request, 'accounts/dashboard_client.html', {
             'reservations': reservations,
         })
+
+@login_required
+def update_provider_status(request, pk, status):
+    if not request.user.is_admin:
+        messages.error(request, "Accès non autorisé.")
+        return redirect('home')
+        
+    provider = get_object_or_404(User, pk=pk, role='prestataire')
+    if status in ['approved', 'rejected']:
+        provider.verification_status = status
+        provider.save()
+        status_label = "validé" if status == 'approved' else "rejeté"
+        messages.success(request, f'Le prestataire {provider.get_full_name()} a été {status_label}.')
+    return redirect('dashboard')
+

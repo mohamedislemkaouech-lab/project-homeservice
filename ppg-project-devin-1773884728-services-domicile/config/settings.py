@@ -8,7 +8,6 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # API Keys
-GEMINI_API_KEY = 'AIzaSyBwJdulrpT2dwpwACRAv2P-DbCOf4YzSFM'
 
 SECRET_KEY = 'django-insecure-n@+p_y9776=a22f#@#fhv3(issrkmd^ht(o8)nf*l_f!=y6^vr'
 

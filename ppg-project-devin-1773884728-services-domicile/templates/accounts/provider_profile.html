@@ -15,8 +15,15 @@
                             <i class="fas fa-hard-hat fa-4x text-white"></i>
                         </div>
                     {% endif %}
-                    <h4>{{ provider.get_full_name }}</h4>
+                    <h4>{{ provider.get_full_name }}
+                        {% if provider.verification_status == 'approved' %}
+                            <i class="fas fa-check-circle text-success fs-5" title="Profil Vérifié"></i>
+                        {% endif %}
+                    </h4>
                     <span class="badge bg-success mb-2">Prestataire</span>
+                    <span class="badge bg-{% if provider.verification_status == 'approved' %}success{% elif provider.verification_status == 'pending' %}warning{% else %}danger{% endif %} mb-2">
+                        {{ provider.get_verification_status_display }}
+                    </span>
                     <div class="text-warning mb-2">
                         {% for i in "12345" %}
                             {% if forloop.counter <= provider.average_rating %}
@@ -35,6 +42,49 @@
                     {% if provider.bio %}
                     <hr>
                     <p class="text-muted text-start">{{ provider.bio }}</p>
+                    {% endif %}
+                    
+                    {% if provider.total_reviews > 0 %}
+                    <hr>
+                    <div class="text-start">
+                        <h6 class="fw-bold mb-3"><i class="fas fa-chart-bar text-primary me-2"></i>Détail des Avis</h6>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>Ponctualité</span>
+                                <span>{{ provider.detailed_ratings.punctuality }}/5</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-warning" style="width: {% widthratio provider.detailed_ratings.punctuality 5 100 %}%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>Qualité du travail</span>
+                                <span>{{ provider.detailed_ratings.quality }}/5</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-warning" style="width: {% widthratio provider.detailed_ratings.quality 5 100 %}%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>Communication</span>
+                                <span>{{ provider.detailed_ratings.communication }}/5</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-warning" style="width: {% widthratio provider.detailed_ratings.communication 5 100 %}%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>Rapport Qualité/Prix</span>
+                                <span>{{ provider.detailed_ratings.value }}/5</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-warning" style="width: {% widthratio provider.detailed_ratings.value 5 100 %}%"></div>
+                            </div>
+                        </div>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -72,7 +122,13 @@
                             {% endfor %}
                         </span>
                     </div>
-                    <p class="text-muted mb-0 mt-1">{{ review.comment }}</p>
+                    <p class="text-muted mb-2 mt-1">{{ review.comment }}</p>
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <span class="badge bg-light text-dark border"><i class="far fa-clock me-1 text-warning"></i>Ponctualité {{ review.rating_punctuality }}/5</span>
+                        <span class="badge bg-light text-dark border"><i class="fas fa-tools me-1 text-warning"></i>Qualité {{ review.rating_quality }}/5</span>
+                        <span class="badge bg-light text-dark border"><i class="far fa-comments me-1 text-warning"></i>Communication {{ review.rating_communication }}/5</span>
+                        <span class="badge bg-light text-dark border"><i class="fas fa-hand-holding-usd me-1 text-warning"></i>Prix {{ review.rating_value }}/5</span>
+                    </div>
                     <small class="text-muted">{{ review.created_at|date:"d/m/Y" }}</small>
                 </div>
             </div>

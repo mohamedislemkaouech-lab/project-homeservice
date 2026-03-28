@@ -62,10 +62,13 @@ class PrestataireRegistrationForm(UserCreationForm):
     bio = forms.CharField(required=False, widget=forms.Textarea(
         attrs={'class': 'form-control', 'placeholder': 'Décrivez votre expérience...', 'rows': 4}
     ))
+    identity_document = forms.FileField(required=True, label="Pièce d'identité (Obligatoire)", widget=forms.FileInput(
+        attrs={'class': 'form-control', 'accept': 'image/*,.pdf'}
+    ))
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email', 'phone', 'city', 'address', 'bio', 'password1', 'password2']
+        fields = ['username', 'first_name', 'last_name', 'email', 'phone', 'city', 'address', 'bio', 'identity_document', 'password1', 'password2']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': "Nom d'utilisateur"}),
         }
@@ -95,7 +98,7 @@ class LoginForm(AuthenticationForm):
 class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'phone', 'city', 'address', 'bio', 'profile_image']
+        fields = ['first_name', 'last_name', 'email', 'phone', 'city', 'address', 'bio', 'profile_image', 'identity_document']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -104,4 +107,5 @@ class ProfileUpdateForm(forms.ModelForm):
             'city': forms.TextInput(attrs={'class': 'form-control'}),
             'address': forms.TextInput(attrs={'class': 'form-control'}),
             'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'identity_document': forms.FileInput(attrs={'class': 'form-control'}),
         }

@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container py-5">
-    <h2 class="fw-bold mb-4"><i class="fas fa-calendar-check text-primary me-2"></i>Mes réservations</h2>
+    <h2 class="fw-bold mb-4"><i class="fas fa-calendar-check text-primary me-2"></i>{% if user.is_admin %}Toutes les réservations{% else %}Mes réservations{% endif %}</h2>
 
     {% if reservations %}
     <div class="row g-3">
@@ -18,16 +18,23 @@
                             {{ r.get_status_display }}
                         </span>
                     </div>
+                    {% if user.is_admin %}
+                    <p class="text-muted mb-1"><i class="fas fa-user-tag me-1"></i>Client : {{ r.client.get_full_name }}</p>
+                    <p class="text-muted mb-1"><i class="fas fa-user-tie me-1"></i>Prestataire : {{ r.service.provider.get_full_name }}</p>
+                    {% else %}
                     <p class="text-muted mb-1"><i class="fas fa-user me-1"></i>{{ r.service.provider.get_full_name }}</p>
+                    {% endif %}
                     <p class="text-muted mb-1"><i class="fas fa-calendar me-1"></i>{{ r.date|date:"d/m/Y" }} à {{ r.time_slot|time:"H:i" }}</p>
                     {% if r.notes %}<p class="text-muted small mb-1"><i class="fas fa-sticky-note me-1"></i>{{ r.notes|truncatewords:15 }}</p>{% endif %}
                     <div class="mt-2">
                         <a href="{% url 'reservation_detail' pk=r.pk %}" class="btn btn-outline-primary btn-sm"><i class="fas fa-eye me-1"></i>Détails</a>
-                        {% if r.status == 'pending' %}
-                            <a href="{% url 'cancel_reservation' pk=r.pk %}" class="btn btn-outline-danger btn-sm"><i class="fas fa-times me-1"></i>Annuler</a>
-                        {% endif %}
-                        {% if r.status == 'completed' and not r.review %}
-                            <a href="{% url 'create_review' reservation_pk=r.pk %}" class="btn btn-outline-warning btn-sm"><i class="fas fa-star me-1"></i>Laisser un avis</a>
+                        {% if not user.is_admin %}
+                            {% if r.status == 'pending' %}
+                                <a href="{% url 'cancel_reservation' pk=r.pk %}" class="btn btn-outline-danger btn-sm"><i class="fas fa-times me-1"></i>Annuler</a>
+                            {% endif %}
+                            {% if r.status == 'completed' and not r.review %}
+                                <a href="{% url 'create_review' reservation_pk=r.pk %}" class="btn btn-outline-warning btn-sm"><i class="fas fa-star me-1"></i>Laisser un avis</a>
+                            {% endif %}
                         {% endif %}
                     </div>
                 </div>
