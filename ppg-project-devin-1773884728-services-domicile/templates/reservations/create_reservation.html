@@ -1,6 +1,45 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Réserver - {{ service.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+.map-wrapper {
+    max-width: 600px;
+    margin: 0 auto 15px auto;
+}
+#map {
+    height: 280px;
+    width: 100%;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border: 2px solid #e9ecef;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.map-container {
+    position: relative;
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 8px;
+    margin-bottom: 15px;
+}
+#locate-btn {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    z-index: 1000;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.address-display {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -20,8 +59,24 @@
                         {% csrf_token %}
                         {% for field in form %}
                         <div class="mb-3">
-                            <label for="{{ field.id_for_label }}" class="form-label fw-semibold">{{ field.label }}</label>
-                            {{ field }}
+                            {% if field.name == 'address_display' %}
+                                <label class="form-label fw-semibold"><i class="fas fa-map-marked-alt text-primary me-2"></i>Adresse d'intervention</label>
+                                <div class="map-wrapper">
+                                    <div class="map-container">
+                                        <button type="button" id="locate-btn" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-location-arrow"></i> Me localiser
+                                        </button>
+                                        <div id="map"></div>
+                                    </div>
+                                </div>
+                                {{ field }}
+                                <small class="form-text text-muted"><i class="fas fa-info-circle me-1"></i>Cliquez sur la carte pour sélectionner l'adresse exacte ou utilisez votre position</small>
+                            {% elif field.name == 'address' or field.name == 'latitude' or field.name == 'longitude' %}
+                                {{ field }}
+                            {% else %}
+                                <label for="{{ field.id_for_label }}" class="form-label fw-semibold">{{ field.label }}</label>
+                                {{ field }}
+                            {% endif %}
                             {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                         </div>
                         {% endfor %}
@@ -35,4 +90,21 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/map_picker.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initMapPicker({
+        mapContainer: 'map',
+        latField: 'id_latitude',
+        lonField: 'id_longitude',
+        addressField: 'id_address',
+        addressDisplayField: 'id_address_display',
+        locateButton: 'locate-btn'
+    });
+});
+</script>
 {% endblock %}

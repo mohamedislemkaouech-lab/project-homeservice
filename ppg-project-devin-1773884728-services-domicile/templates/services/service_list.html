@@ -1,95 +1,187 @@
 {% extends 'base.html' %}
 
-{% block title %}Services{% endblock %}
+{% block title %}Browse Services{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <h2 class="fw-bold mb-4"><i class="fas fa-search text-primary me-2"></i>Rechercher un service</h2>
+<div style="background:var(--cream);min-height:calc(100vh - 65px);padding:40px 0;">
+<div class="container">
 
-    <!-- Search & Filters -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <form method="GET" class="row g-3">
-                <div class="col-md-4">
-                    <input type="text" name="q" class="form-control" placeholder="Rechercher..." value="{{ query }}">
-                </div>
-                <div class="col-md-2">
-                    <select name="category" class="form-control">
-                        <option value="">Toutes catégories</option>
-                        {% for cat in categories %}
-                            <option value="{{ cat.pk }}" {% if selected_category == cat.pk|stringformat:"d" %}selected{% endif %}>{{ cat.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <input type="text" name="city" class="form-control" placeholder="Ville" value="{{ city }}">
-                </div>
-                <div class="col-md-1">
-                    <input type="number" name="min_price" class="form-control" placeholder="Min DT" value="{{ min_price }}">
-                </div>
-                <div class="col-md-1">
-                    <input type="number" name="max_price" class="form-control" placeholder="Max DT" value="{{ max_price }}">
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search me-1"></i>Chercher</button>
-                </div>
-            </form>
-            <div class="mt-2">
-                <small class="text-muted">Trier par :</small>
-                <a href="?{{ request.GET.urlencode }}&sort=price_asc" class="btn btn-outline-secondary btn-sm">Prix croissant</a>
-                <a href="?{{ request.GET.urlencode }}&sort=price_desc" class="btn btn-outline-secondary btn-sm">Prix décroissant</a>
-                <a href="?{{ request.GET.urlencode }}&sort=newest" class="btn btn-outline-secondary btn-sm">Plus récents</a>
+  <!-- Page header -->
+  <div class="mb-5">
+    <span class="section-label">Marketplace</span>
+    <h1 style="font-size:2.6rem;margin-bottom:4px;">Professional Services</h1>
+    <p style="color:var(--slate-500);">
+      Discover the finest local craftsmen and professionals vetted for excellence and reliability.
+    </p>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- ── Sidebar ─────────────────────────────────── -->
+    <div class="col-lg-3">
+      <div class="filters-sidebar">
+
+        <form method="GET" id="filterForm">
+          <!-- Categories -->
+          <label class="filter-label">Categories</label>
+          <div class="mb-4">
+            {% for cat in categories %}
+            <div class="form-check filter-check mb-2">
+              <input class="form-check-input" type="radio" name="category"
+                     id="cat{{ cat.pk }}" value="{{ cat.pk }}"
+                     {% if selected_category == cat.pk|stringformat:"d" %}checked{% endif %}
+                     onchange="document.getElementById('filterForm').submit()">
+              <label class="form-check-label" for="cat{{ cat.pk }}">{{ cat.name }}</label>
             </div>
+            {% endfor %}
+            {% if selected_category %}
+            <div class="form-check filter-check mb-2">
+              <input class="form-check-input" type="radio" name="category" id="catAll" value=""
+                     {% if not selected_category %}checked{% endif %}
+                     onchange="document.getElementById('filterForm').submit()">
+              <label class="form-check-label" for="catAll" style="color:var(--slate-500);">All Categories</label>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Price range -->
+          <label class="filter-label">Price Range</label>
+          <div class="mb-4 d-flex gap-2 align-items-center">
+            <input type="number" name="min_price" placeholder="Min" value="{{ min_price }}"
+                   class="form-control" style="font-size:.82rem;padding:7px 10px;">
+            <span style="color:var(--slate-300);">–</span>
+            <input type="number" name="max_price" placeholder="Max" value="{{ max_price }}"
+                   class="form-control" style="font-size:.82rem;padding:7px 10px;">
+          </div>
+
+          <!-- City -->
+          <label class="filter-label">Location</label>
+          <input type="text" name="city" placeholder="City" value="{{ city }}"
+                 class="form-control mb-4" style="font-size:.88rem;">
+
+          <!-- Search keyword -->
+          <label class="filter-label">Keyword</label>
+          <input type="text" name="q" placeholder="Search..." value="{{ query }}"
+                 class="form-control mb-4" style="font-size:.88rem;">
+
+          <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+
+          {% if query or selected_category or city or min_price or max_price %}
+          <a href="{% url 'service_list' %}"
+             class="btn btn-outline-primary w-100 mt-2" style="font-size:.85rem;">
+            Clear All
+          </a>
+          {% endif %}
+        </form>
+
+        <!-- Testimonial -->
+        <div class="testimonial-sidebar-card">
+          "Found our master plumber in minutes. The quality was exceptional."
+          <span class="author">— Sarah J., Homeowner</span>
         </div>
+
+      </div>
     </div>
 
-    <!-- Results -->
-    <p class="text-muted">{{ services|length }} service(s) trouvé(s)</p>
-    <div class="row g-4">
-        {% for service in services %}
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm service-card">
-                {% if service.image %}
-                <img src="{{ service.image.url }}" class="card-img-top" alt="{{ service.title }}" style="height: 200px; object-fit: cover;">
-                {% else %}
-                <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
-                    <i class="fas fa-tools fa-3x text-white"></i>
-                </div>
-                {% endif %}
-                <div class="card-body">
-                    <span class="badge bg-primary mb-2">{{ service.category.name }}</span>
-                    <h5 class="card-title">{{ service.title }}</h5>
-                    <p class="card-text text-muted small">{{ service.description|truncatewords:20 }}</p>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="fw-bold text-primary">{{ service.price }} DT/{{ service.get_price_unit_display }}</span>
-                        <span class="text-warning">
-                            {% for i in "12345" %}
-                                {% if forloop.counter <= service.average_rating %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
-                            {% endfor %}
-                            <small class="text-muted">({{ service.total_reviews }})</small>
-                        </span>
-                    </div>
-                    <p class="text-muted small mt-2 mb-0">
-                        <i class="fas fa-map-marker-alt me-1"></i>{{ service.city }}
-                        <span class="float-end">
-                            <a href="{% url 'provider_profile' pk=service.provider.pk %}" class="text-decoration-none">
-                                <i class="fas fa-user me-1"></i>{{ service.provider.get_full_name }}
-                            </a>
-                        </span>
-                    </p>
-                </div>
-                <div class="card-footer bg-white border-0">
-                    <a href="{% url 'service_detail' pk=service.pk %}" class="btn btn-outline-primary w-100">Voir les détails</a>
-                </div>
-            </div>
+    <!-- ── Results ────────────────────────────────── -->
+    <div class="col-lg-9">
+
+      <!-- Toolbar -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <p style="color:var(--slate-500);font-size:.9rem;margin:0;">
+          Showing <strong style="color:var(--slate-900);">{{ services|length }}</strong>
+          results{% if query %} for "<strong>{{ query }}</strong>"{% endif %}
+        </p>
+        <div class="d-flex align-items-center gap-2">
+          <span style="font-size:.78rem;font-weight:700;letter-spacing:.08em;
+                       text-transform:uppercase;color:var(--slate-500);">Sort by:</span>
+          <select class="form-control" style="font-size:.85rem;padding:7px 12px;width:auto;"
+                  onchange="window.location.href=this.value">
+            <option value="?{{ request.GET.urlencode }}&sort=newest"
+                    {% if sort == 'newest' %}selected{% endif %}>Newest</option>
+            <option value="?{{ request.GET.urlencode }}&sort=price_asc"
+                    {% if sort == 'price_asc' %}selected{% endif %}>Price: Low–High</option>
+            <option value="?{{ request.GET.urlencode }}&sort=price_desc"
+                    {% if sort == 'price_desc' %}selected{% endif %}>Price: High–Low</option>
+          </select>
         </div>
+      </div>
+
+      <!-- Cards grid -->
+      <div class="row g-4">
+        {% for service in services %}
+        <div class="col-md-6 col-xl-4">
+          <div class="pro-card h-100" style="position:relative;">
+
+            <!-- Photo -->
+            {% if service.image %}
+              <img src="{{ service.image.url }}" class="pro-photo" alt="{{ service.title }}">
+            {% else %}
+              <div class="pro-photo-placeholder">
+                <i class="fas {{ service.category.icon|default:'fa-tools' }}"></i>
+              </div>
+            {% endif %}
+
+            <!-- Badge -->
+            {% if service.provider.verification_status == 'approved' %}
+            <span class="pro-badge">
+              <i class="fas fa-check-circle" style="font-size:.6rem;"></i> Verified Pro
+            </span>
+            {% endif %}
+
+            <div class="pro-body">
+              <!-- Rating -->
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <div class="pro-name" style="font-size:1rem;">
+                  {{ service.provider.get_full_name }}
+                </div>
+                <div class="pro-rating" style="font-size:.82rem;">
+                  <i class="fas fa-star"></i>
+                  {% if service.average_rating %}{{ service.average_rating }}{% else %}5.0{% endif %}
+                </div>
+              </div>
+
+              <div class="pro-specialty">
+                {{ service.category.name|upper }}
+                {% if service.provider.created_at %}
+                · {{ service.provider.created_at|date:"Y"|add:"-2" }} Yrs Exp.
+                {% endif %}
+              </div>
+
+              <p class="pro-desc">{{ service.description|truncatewords:15 }}</p>
+
+              <div class="pro-price-row">
+                <div>
+                  <small>Starting at</small>
+                  <div class="pro-price">
+                    {{ service.price }} DT
+                    <small>/{{ service.get_price_unit_display }}</small>
+                  </div>
+                </div>
+                <a href="{% url 'service_detail' pk=service.pk %}"
+                   class="btn-book-now">Book Now</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {% empty %}
         <div class="col-12 text-center py-5">
-            <i class="fas fa-search fa-4x text-muted mb-3"></i>
-            <h4 class="text-muted">Aucun service trouvé</h4>
-            <p class="text-muted">Essayez de modifier vos critères de recherche.</p>
+          <div style="width:64px;height:64px;border-radius:50%;background:var(--green-pale);
+                      display:flex;align-items:center;justify-content:center;
+                      margin:0 auto 16px;font-size:1.5rem;color:var(--green-deep);">
+            <i class="fas fa-search"></i>
+          </div>
+          <h4 style="color:var(--slate-500);">No services found</h4>
+          <p style="color:var(--slate-300);font-size:.9rem;">
+            Try adjusting your search criteria.
+          </p>
         </div>
         {% endfor %}
-    </div>
+      </div>
+
+    </div><!-- /results -->
+  </div><!-- /row -->
+</div>
 </div>
 {% endblock %}

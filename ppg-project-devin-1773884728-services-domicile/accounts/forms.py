@@ -59,6 +59,12 @@ class PrestataireRegistrationForm(UserCreationForm):
     address = forms.CharField(max_length=255, required=False, widget=forms.TextInput(
         attrs={'class': 'form-control', 'placeholder': 'Adresse'}
     ))
+    address_display = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': True, 'placeholder': 'Cliquez sur la carte pour sélectionner une adresse'}),
+        required=False
+    )
+    latitude = forms.FloatField(widget=forms.HiddenInput(), required=False)
+    longitude = forms.FloatField(widget=forms.HiddenInput(), required=False)
     bio = forms.CharField(required=False, widget=forms.Textarea(
         attrs={'class': 'form-control', 'placeholder': 'Décrivez votre expérience...', 'rows': 4}
     ))
@@ -68,9 +74,10 @@ class PrestataireRegistrationForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email', 'phone', 'city', 'address', 'bio', 'identity_document', 'password1', 'password2']
+        fields = ['username', 'first_name', 'last_name', 'email', 'phone', 'city', 'address', 'address_display', 'latitude', 'longitude', 'bio', 'identity_document', 'password1', 'password2']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': "Nom d'utilisateur"}),
+            'address': forms.HiddenInput(),
         }
 
     def __init__(self, *args, **kwargs):

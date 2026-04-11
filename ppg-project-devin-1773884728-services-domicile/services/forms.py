@@ -3,9 +3,16 @@ from .models import Service, Availability
 
 
 class ServiceForm(forms.ModelForm):
+    latitude = forms.FloatField(widget=forms.HiddenInput(), required=False)
+    longitude = forms.FloatField(widget=forms.HiddenInput(), required=False)
+    address_display = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': True, 'placeholder': 'Cliquez sur la carte pour sélectionner une adresse'}),
+        required=False
+    )
+    
     class Meta:
         model = Service
-        fields = ['category', 'title', 'description', 'price', 'price_unit', 'city', 'address', 'image']
+        fields = ['category', 'title', 'description', 'price', 'price_unit', 'city', 'address', 'image', 'latitude', 'longitude', 'address_display']
         widgets = {
             'category': forms.Select(attrs={'class': 'form-control'}),
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Titre du service'}),
@@ -13,7 +20,7 @@ class ServiceForm(forms.ModelForm):
             'price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Prix'}),
             'price_unit': forms.Select(attrs={'class': 'form-control'}),
             'city': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ville'}),
-            'address': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Adresse'}),
+            'address': forms.HiddenInput(),
         }
 
 

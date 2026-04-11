@@ -6,6 +6,23 @@ from django.http import JsonResponse
 from .models import Service, Category, Availability
 from .forms import ServiceForm, AvailabilityForm
 from accounts.models import User
+import math
+
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+    """Calculate the great-circle distance between two points on Earth in kilometers."""
+    R = 6371  # Earth's radius in kilometers
+    
+    lat1_rad = math.radians(lat1)
+    lat2_rad = math.radians(lat2)
+    delta_lat = math.radians(lat2 - lat1)
+    delta_lon = math.radians(lon2 - lon1)
+    
+    a = math.sin(delta_lat / 2) ** 2 + \
+        math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    
+    return R * c
 
 
 def category_api(request, pk):
@@ -57,7 +74,7 @@ def category_prestataires(request, pk):
 
 
 def service_list(request):
-    services = Service.objects.filter(is_active=True)
+    services = Service.objects.filter(is_active=True).select_related('provider')
     categories = Category.objects.all()
 
     query = request.GET.get('q', '')
@@ -66,6 +83,11 @@ def service_list(request):
     min_price = request.GET.get('min_price', '')
     max_price = request.GET.get('max_price', '')
     sort = request.GET.get('sort', '')
+    
+    # Distance filtering params
+    user_lat = request.GET.get('lat', '')
+    user_lon = request.GET.get('lon', '')
+    distance_km = request.GET.get('distance', '50')
 
     if query:
         services = services.filter(
@@ -82,13 +104,36 @@ def service_list(request):
         services = services.filter(price__gte=min_price)
     if max_price:
         services = services.filter(price__lte=max_price)
+    
+    # Distance filtering using Haversine formula
+    if user_lat and user_lon and distance_km:
+        try:
+            user_lat = float(user_lat)
+            user_lon = float(user_lon)
+            max_distance = float(distance_km)
+            
+            # Filter services by provider location
+            filtered_services = []
+            for service in services:
+                provider = service.provider
+                if provider.latitude is not None and provider.longitude is not None:
+                    dist = haversine_distance(user_lat, user_lon, provider.latitude, provider.longitude)
+                    if dist <= max_distance:
+                        service.distance = round(dist, 1)
+                        filtered_services.append(service)
+            
+            services = filtered_services
+        except (ValueError, TypeError):
+            pass
 
     if sort == 'price_asc':
-        services = services.order_by('price')
+        services = sorted(services, key=lambda x: x.price) if isinstance(services, list) else services.order_by('price')
     elif sort == 'price_desc':
-        services = services.order_by('-price')
+        services = sorted(services, key=lambda x: x.price, reverse=True) if isinstance(services, list) else services.order_by('-price')
     elif sort == 'newest':
-        services = services.order_by('-created_at')
+        services = sorted(services, key=lambda x: x.created_at, reverse=True) if isinstance(services, list) else services.order_by('-created_at')
+    elif sort == 'distance' and hasattr(services[0], 'distance') if services else False:
+        services = sorted(services, key=lambda x: getattr(x, 'distance', float('inf')))
 
     return render(request, 'services/service_list.html', {
         'services': services,
@@ -99,6 +144,9 @@ def service_list(request):
         'min_price': min_price,
         'max_price': max_price,
         'sort': sort,
+        'lat': user_lat,
+        'lon': user_lon,
+        'distance': distance_km,
     })
 
 

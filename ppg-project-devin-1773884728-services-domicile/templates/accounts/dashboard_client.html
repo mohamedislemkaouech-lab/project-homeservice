@@ -1,113 +1,297 @@
 {% extends 'base.html' %}
 
-{% block title %}Tableau de bord Client{% endblock %}
+{% block title %}Your Dashboard{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <h2 class="fw-bold mb-4"><i class="fas fa-tachometer-alt text-primary me-2"></i>{% if is_admin_view %}Toutes les réservations{% else %}Mes réservations{% endif %}</h2>
+<div class="dashboard-wrap">
+<div class="container">
 
-    <a href="{% url 'service_list' %}" class="btn btn-primary mb-4"><i class="fas fa-search me-1"></i>Chercher un service</a>
-
-    {% if is_admin_view and pending_providers %}
-    <div class="card shadow-sm mb-5 border-warning">
-        <div class="card-header bg-warning text-dark fw-bold">
-            <i class="fas fa-users-cog me-2"></i>Validation des prestataires en attente
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Nom</th>
-                            <th>Email</th>
-                            <th>Pièce d'identité</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for provider in pending_providers %}
-                        <tr>
-                            <td>{{ provider.get_full_name }}</td>
-                            <td>{{ provider.email }}</td>
-                            <td>
-                                {% if provider.identity_document %}
-                                <a href="{{ provider.identity_document.url }}" target="_blank" class="btn btn-outline-info btn-sm">
-                                    <i class="fas fa-id-card me-1"></i>Voir le document
-                                </a>
-                                {% else %}
-                                <span class="text-danger small">Non fourni</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{% url 'update_provider_status' pk=provider.pk status='approved' %}" class="btn btn-success btn-sm"><i class="fas fa-check"></i> Valider</a>
-                                <a href="{% url 'update_provider_status' pk=provider.pk status='rejected' %}" class="btn btn-danger btn-sm"><i class="fas fa-times"></i> Refuser</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <!-- Header row -->
+  <div class="d-flex justify-content-between align-items-start mb-5">
+    <div>
+      <span class="section-label">Welcome back</span>
+      <h1 style="font-size:2.6rem;margin:0;">Your Dashboard.</h1>
     </div>
-    {% endif %}
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);
+                padding:10px 18px;font-size:.85rem;color:var(--slate-500);display:flex;
+                align-items:center;gap:8px;">
+      <i class="fas fa-calendar-alt" style="color:var(--green-deep);"></i>
+      {% now "F j, Y" %}
+    </div>
+  </div>
 
-    <h3 class="fw-bold mb-3">Liste des réservations</h3>
+  <!-- ── Stat Cards ─────────────────────────────── -->
+  {% if not is_admin_view %}
+  <div class="row g-3 mb-4">
+    <!-- Active requests -->
+    <div class="col-md-4">
+      <div class="dashboard-stat-card">
+        <span class="stat-number-label">01</span>
+        <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
+        <span class="stat-title">Active Requests</span>
+        <div class="stat-number">
+          {{ reservations|length }}
+        </div>
+        {% for r in reservations %}
+          {% if r.status == 'accepted' %}
+          <div style="margin-top:12px;background:var(--green-pale);border-radius:6px;
+                      padding:8px 12px;font-size:.8rem;color:var(--green-deep);
+                      display:flex;align-items:center;gap:6px;">
+            <span style="width:7px;height:7px;background:var(--green-mid);border-radius:50%;flex-shrink:0;"></span>
+            {{ r.service.title|truncatechars:32 }} — {{ r.date|date:"d M" }}
+          </div>
+          {% if forloop.first %}{% endif %}
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
 
-    {% if reservations %}
+    <!-- Past services -->
+    <div class="col-md-4">
+      <div class="dashboard-stat-card">
+        <span class="stat-number-label">02</span>
+        <div class="stat-icon"><i class="fas fa-history"></i></div>
+        <span class="stat-title">Past Services</span>
+        <div class="stat-number">
+          {% with reservations|length as total %}{{ total }}{% endwith %}
+        </div>
+        <div style="margin-top:12px;">
+          <a href="{% url 'my_reservations' %}"
+             style="font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+                    color:var(--green-deep);text-decoration:none;">
+            Download Receipts →
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Saved pros placeholder -->
+    <div class="col-md-4">
+      <div class="dashboard-stat-card">
+        <span class="stat-number-label">03</span>
+        <div class="stat-icon"><i class="fas fa-star"></i></div>
+        <span class="stat-title">Saved Pros</span>
+        <div class="stat-number">—</div>
+        <div style="margin-top:12px;">
+          <a href="{% url 'service_list' %}"
+             style="font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+                    color:var(--green-deep);text-decoration:none;">
+            Browse Pros →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Admin: pending providers ────────────────── -->
+  {% if is_admin_view and pending_providers %}
+  <div class="activity-card mb-4"
+       style="border-color:var(--amber);border-width:1.5px;">
+    <div class="activity-header">
+      <span style="font-weight:700;font-size:.95rem;">
+        <i class="fas fa-user-clock text-warning me-2"></i>
+        Pending Provider Verification
+      </span>
+    </div>
     <div class="table-responsive">
-        <table class="table table-hover shadow-sm">
-            <thead class="table-primary">
-                <tr>
-                    <th>#</th>
-                    <th>Service</th>
-                    {% if is_admin_view %}<th>Client</th>{% endif %}
-                    <th>Prestataire</th>
-                    <th>Date</th>
-                    <th>Heure</th>
-                    <th>Statut</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for r in reservations %}
-                <tr>
-                    <td>{{ r.pk }}</td>
-                    <td>{{ r.service.title }}</td>
-                    {% if is_admin_view %}
-                    <td>{{ r.client.get_full_name }}</td>
-                    {% endif %}
-                    <td>
-                        <a href="{% url 'provider_profile' pk=r.service.provider.pk %}">{{ r.service.provider.get_full_name }}</a>
-                    </td>
-                    <td>{{ r.date|date:"d/m/Y" }}</td>
-                    <td>{{ r.time_slot|time:"H:i" }}</td>
-                    <td>
-                        <span class="badge bg-{% if r.status == 'pending' %}warning{% elif r.status == 'accepted' %}primary{% elif r.status == 'completed' %}success{% elif r.status == 'rejected' %}danger{% else %}secondary{% endif %}">
-                            {{ r.get_status_display }}
-                        </span>
-                    </td>
-                    <td>
-                        <a href="{% url 'reservation_detail' pk=r.pk %}" class="btn btn-outline-primary btn-sm"><i class="fas fa-eye"></i></a>
-                        {% if not is_admin_view %}
-                            {% if r.status == 'pending' %}
-                                <a href="{% url 'cancel_reservation' pk=r.pk %}" class="btn btn-outline-danger btn-sm"><i class="fas fa-times"></i> Annuler</a>
-                            {% endif %}
-                            {% if r.status == 'completed' and not r.review %}
-                                <a href="{% url 'create_review' reservation_pk=r.pk %}" class="btn btn-outline-warning btn-sm"><i class="fas fa-star"></i> Avis</a>
-                            {% endif %}
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+      <table class="table mb-0" style="font-size:.88rem;">
+        <thead style="background:var(--cream);">
+          <tr>
+            <th style="padding:12px 24px;">Name</th>
+            <th>Email</th>
+            <th>ID Document</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for provider in pending_providers %}
+          <tr>
+            <td style="padding:14px 24px;font-weight:600;">{{ provider.get_full_name }}</td>
+            <td style="color:var(--slate-500);">{{ provider.email }}</td>
+            <td>
+              {% if provider.identity_document %}
+              <a href="{{ provider.identity_document.url }}" target="_blank"
+                 style="font-size:.82rem;color:var(--green-deep);font-weight:600;">
+                <i class="fas fa-id-card me-1"></i>View Document
+              </a>
+              {% else %}
+              <span style="color:var(--slate-300);font-size:.82rem;">Not provided</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{% url 'update_provider_status' pk=provider.pk status='approved' %}"
+                 class="btn btn-primary btn-sm me-1" style="font-size:.75rem;padding:5px 12px;">
+                <i class="fas fa-check me-1"></i>Approve
+              </a>
+              <a href="{% url 'update_provider_status' pk=provider.pk status='rejected' %}"
+                 class="btn btn-sm"
+                 style="background:rgba(220,38,38,.1);color:#dc2626;font-size:.75rem;
+                        padding:5px 12px;border-radius:var(--radius-sm);font-weight:600;">
+                <i class="fas fa-times me-1"></i>Reject
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-    {% else %}
-    <div class="text-center py-5">
-        <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
-        <h4 class="text-muted">Aucune réservation</h4>
-        <p class="text-muted">Commencez par rechercher un service à domicile !</p>
+  </div>
+  {% endif %}
+
+  <!-- ── Recent Activity ────────────────────────── -->
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="activity-card">
+        <div class="activity-header">
+          <span style="font-weight:700;font-size:.95rem;">Recent Activity</span>
+          <a href="{% url 'my_reservations' %}"
+             style="font-size:.8rem;font-weight:600;color:var(--green-deep);">View All</a>
+        </div>
+
+        {% for r in reservations %}
+        <div class="activity-row">
+          <!-- Thumb -->
+          {% if r.service.image %}
+          <img src="{{ r.service.image.url }}" class="activity-thumb"
+               style="width:52px;height:52px;border-radius:var(--radius-sm);object-fit:cover;">
+          {% else %}
+          <div class="activity-thumb">
+            <i class="fas {{ r.service.category.icon|default:'fa-tools' }}"></i>
+          </div>
+          {% endif %}
+
+          <!-- Info -->
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;font-size:.92rem;color:var(--slate-900);
+                        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              {{ r.service.title }}
+            </div>
+            <div style="font-size:.8rem;color:var(--slate-500);margin-top:2px;">
+              Service provided by
+              <a href="{% url 'provider_profile' pk=r.service.provider.pk %}"
+                 style="font-weight:600;color:var(--slate-700);">
+                {{ r.service.provider.get_full_name }}
+              </a>
+            </div>
+            <div style="font-size:.78rem;color:var(--slate-300);margin-top:3px;">
+              <i class="far fa-clock me-1"></i>{{ r.date|date:"M j" }},
+              {{ r.time_slot|time:"H:i" }}
+              &nbsp;·&nbsp;
+              <i class="fas fa-tag me-1"></i>{{ r.price|default:"—" }}
+            </div>
+          </div>
+
+          <!-- Status + action -->
+          <div class="d-flex flex-column align-items-end gap-2">
+            {% if r.status == 'completed' %}
+              <span class="badge-completed">Completed</span>
+              {% if not r.review %}
+              <a href="{% url 'create_review' reservation_pk=r.pk %}"
+                 class="btn btn-outline-primary btn-sm" style="font-size:.75rem;padding:4px 12px;">
+                Write Review
+              </a>
+              {% endif %}
+            {% elif r.status == 'accepted' %}
+              <span class="badge-scheduled">Scheduled</span>
+              <a href="{% url 'reservation_detail' pk=r.pk %}"
+                 class="btn btn-outline-primary btn-sm" style="font-size:.75rem;padding:4px 12px;">
+                Reschedule
+              </a>
+            {% elif r.status == 'pending' %}
+              <span class="badge-pending">Pending</span>
+              <a href="{% url 'cancel_reservation' pk=r.pk %}"
+                 class="btn btn-sm"
+                 style="font-size:.75rem;padding:4px 12px;border-radius:var(--radius-sm);
+                        border:1.5px solid var(--border);color:var(--slate-500);font-weight:600;">
+                Cancel
+              </a>
+            {% else %}
+              <span class="badge"
+                    style="background:var(--slate-100);color:var(--slate-500);">
+                {{ r.get_status_display }}
+              </span>
+            {% endif %}
+          </div>
+        </div>
+        {% empty %}
+        <div style="padding:48px 24px;text-align:center;">
+          <div style="width:56px;height:56px;border-radius:50%;background:var(--green-pale);
+                      display:flex;align-items:center;justify-content:center;
+                      margin:0 auto 14px;font-size:1.4rem;color:var(--green-deep);">
+            <i class="fas fa-calendar-times"></i>
+          </div>
+          <p style="color:var(--slate-500);font-size:.9rem;margin:0;">No bookings yet.</p>
+          <a href="{% url 'service_list' %}" class="btn btn-primary mt-3" style="font-size:.85rem;">
+            Find a Pro
+          </a>
+        </div>
+        {% endfor %}
+      </div>
     </div>
-    {% endif %}
+
+    <!-- ── Right sidebar ────────────────────────── -->
+    <div class="col-lg-4">
+      <!-- Profile card -->
+      <div class="activity-card mb-3">
+        <div style="background:var(--green-deep);height:70px;border-radius:var(--radius-md) var(--radius-md) 0 0;"></div>
+        <div style="padding:0 24px 24px;text-align:center;margin-top:-36px;">
+          <div style="width:72px;height:72px;border-radius:50%;border:4px solid var(--white);
+                      background:var(--green-pale);display:flex;align-items:center;
+                      justify-content:center;font-size:1.8rem;color:var(--green-deep);
+                      margin:0 auto 12px;">
+            {% if user.profile_image %}
+              <img src="{{ user.profile_image.url }}" style="width:100%;height:100%;
+                   border-radius:50%;object-fit:cover;">
+            {% else %}
+              <i class="fas fa-user"></i>
+            {% endif %}
+          </div>
+          <div style="font-family:var(--font-display);font-size:1.1rem;color:var(--slate-900);">
+            {{ user.get_full_name|default:user.username }}
+          </div>
+          <div style="font-size:.75rem;color:var(--slate-500);margin-bottom:16px;">
+            Member since {{ user.date_joined|date:"Y" }}
+          </div>
+
+          <!-- Account links -->
+          <div style="border-top:1px solid var(--border);padding-top:16px;text-align:left;">
+            <a href="{% url 'profile_edit' %}"
+               style="display:flex;align-items:center;gap:10px;padding:10px 0;
+                      font-size:.88rem;font-weight:500;color:var(--slate-700);
+                      border-bottom:1px solid var(--border);">
+              <i class="fas fa-user" style="width:16px;color:var(--slate-300);"></i>
+              Personal Info
+            </a>
+            <a href="{% url 'profile_edit' %}"
+               style="display:flex;align-items:center;gap:10px;padding:10px 0;
+                      font-size:.88rem;font-weight:500;color:var(--slate-700);
+                      border-bottom:1px solid var(--border);">
+              <i class="fas fa-credit-card" style="width:16px;color:var(--slate-300);"></i>
+              Payment Methods
+            </a>
+            <a href="#"
+               style="display:flex;align-items:center;gap:10px;padding:10px 0;
+                      font-size:.88rem;font-weight:500;color:var(--slate-700);">
+              <i class="fas fa-bell" style="width:16px;color:var(--slate-300);"></i>
+              Notifications
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <a href="{% url 'service_list' %}" class="btn btn-primary w-100">
+          <i class="fas fa-search me-2"></i>Find a Service
+        </a>
+        <a href="{% url 'my_reservations' %}" class="btn btn-outline-primary w-100">
+          <i class="fas fa-calendar me-2"></i>All Bookings
+        </a>
+      </div>
+    </div>
+  </div><!-- /row -->
+
+</div>
 </div>
 {% endblock %}
