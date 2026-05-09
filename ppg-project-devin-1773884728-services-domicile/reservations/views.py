@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db.models import Q
 from .models import Reservation
 from .forms import ReservationForm
 from services.models import Service
@@ -16,19 +17,62 @@ def create_reservation(request, service_pk):
 
     if request.method == 'POST':
         form = ReservationForm(request.POST)
+        # Add service to form for validation
+        form.instance.service = service
+        
         if form.is_valid():
-            reservation = form.save(commit=False)
-            reservation.client = request.user
-            reservation.service = service
-            reservation.save()
-            messages.success(request, 'Réservation effectuée avec succès !')
-            return redirect('my_reservations')
+            date = form.cleaned_data.get('date')
+            time_slot = form.cleaned_data.get('time_slot')
+            
+            # Check for double-booking
+            conflicts = Reservation.objects.filter(
+                service=service,
+                date=date,
+                time_slot=time_slot,
+                status__in=['pending', 'accepted']
+            )
+            
+            if conflicts.exists():
+                messages.error(request, "Ce créneau est déjà réservé pour ce service. Veuillez choisir une autre date ou heure.")
+            else:
+                # Check provider availability
+                from datetime import datetime
+                if date and time_slot:
+                    weekday = date.weekday()  # Monday is 0, Sunday is 6
+                    time_str = time_slot.strftime('%H:%M')
+                    
+                    # Check if provider has availability settings
+                    availabilities = service.provider.availabilities.filter(
+                        is_available=True,
+                        day_of_week=weekday,
+                        start_time__lte=time_str,
+                        end_time__gte=time_str
+                    )
+                    
+                    if service.provider.availabilities.exists() and not availabilities.exists():
+                        # Provider has availability settings but this slot is not available
+                        messages.warning(
+                            request, 
+                            f"Attention : Le prestataire n'est pas disponible à cette heure le {date.strftime('%A')}. "
+                            f"Veuillez vérifier ses disponibilités ci-dessous."
+                        )
+                
+                reservation = form.save(commit=False)
+                reservation.client = request.user
+                reservation.service = service
+                reservation.save()
+                messages.success(request, 'Réservation effectuée avec succès !')
+                return redirect('my_reservations')
     else:
         form = ReservationForm()
+
+    # Get provider availability
+    provider_availabilities = service.provider.availabilities.filter(is_available=True).order_by('day_of_week', 'start_time')
 
     return render(request, 'reservations/create_reservation.html', {
         'form': form,
         'service': service,
+        'provider_availabilities': provider_availabilities,
     })
 
 

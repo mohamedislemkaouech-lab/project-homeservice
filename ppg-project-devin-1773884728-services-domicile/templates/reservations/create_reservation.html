@@ -55,6 +55,56 @@
                         <strong>Prix :</strong> {{ service.price }} DT / {{ service.get_price_unit_display }}
                     </div>
 
+                    <!-- Provider Availability Section -->
+                    {% if provider_availabilities %}
+                    <div class="card mb-4" style="border-left: 4px solid var(--color-primary);">
+                        <div class="card-body">
+                            <h6 class="card-title mb-3">
+                                <i class="fas fa-clock text-primary me-2"></i>
+                                Disponibilités du prestataire
+                            </h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Jour</th>
+                                            <th>Heures</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for availability in provider_availabilities %}
+                                        <tr>
+                                            <td>
+                                                {% if availability.day_of_week == 0 %}Lundi{% endif %}
+                                                {% if availability.day_of_week == 1 %}Mardi{% endif %}
+                                                {% if availability.day_of_week == 2 %}Mercredi{% endif %}
+                                                {% if availability.day_of_week == 3 %}Jeudi{% endif %}
+                                                {% if availability.day_of_week == 4 %}Vendredi{% endif %}
+                                                {% if availability.day_of_week == 5 %}Samedi{% endif %}
+                                                {% if availability.day_of_week == 6 %}Dimanche{% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-success">
+                                                    {{ availability.start_time }} - {{ availability.end_time }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="2" class="text-muted">Aucune disponibilité définie</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Veuillez choisir une date et heure qui correspondent aux disponibilités du prestataire.
+                            </small>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <form method="POST">
                         {% csrf_token %}
                         {% for field in form %}

@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.db.models import Q
 
  
 
@@ -32,6 +33,14 @@ class Reservation(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['service', 'date', 'time_slot'],
+                condition=Q(status__in=['pending', 'accepted']),
+                name='unique_active_reservation',
+                violation_error_message='Ce créneau est déjà réservé pour ce service. Veuillez choisir une autre date ou heure.'
+            )
+        ]
 
     def __str__(self):
         return f"Réservation #{self.pk} - {self.client.get_full_name()} -> {self.service.title}"

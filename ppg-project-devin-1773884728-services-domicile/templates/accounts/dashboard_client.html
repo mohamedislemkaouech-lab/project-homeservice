@@ -12,11 +12,18 @@
       <span class="section-label">Welcome back</span>
       <h1 style="font-size:2.6rem;margin:0;">Your Dashboard.</h1>
     </div>
-    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);
-                padding:10px 18px;font-size:.85rem;color:var(--slate-500);display:flex;
-                align-items:center;gap:8px;">
-      <i class="fas fa-calendar-alt" style="color:var(--green-deep);"></i>
-      {% now "F j, Y" %}
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+      {% if is_admin_view %}
+        <a href="{% url 'admin_stats' %}" class="btn btn-primary" style="font-size:.85rem;padding:8px 16px;">
+          <i class="fas fa-chart-bar me-2"></i>Voir les statistiques
+        </a>
+      {% endif %}
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);
+                  padding:10px 18px;font-size:.85rem;color:var(--slate-500);display:flex;
+                  align-items:center;gap:8px;">
+        <i class="fas fa-calendar-alt" style="color:var(--green-deep);"></i>
+        {% now "F j, Y" %}
+      </div>
     </div>
   </div>
 
@@ -139,6 +146,86 @@
   </div>
   {% endif %}
 
+  <!-- ── Admin: Review Moderation ─────────────────── -->
+  {% if is_admin_view and flagged_reviews %}
+  <div class="activity-card mb-4"
+       style="border-color:var(--amber);border-width:1.5px;">
+    <div class="activity-header">
+      <span style="font-weight:700;font-size:.95rem;">
+        <i class="fas fa-flag text-warning me-2"></i>
+        Modération des Avis
+      </span>
+      <span style="font-size:.8rem;color:var(--slate-500);">
+        {{ flagged_reviews|length }} avis signalés
+      </span>
+    </div>
+    <div class="table-responsive">
+      <table class="table mb-0" style="font-size:.88rem;">
+        <thead style="background:var(--cream);">
+          <tr>
+            <th style="padding:12px 24px;">Client</th>
+            <th>Prestataire</th>
+            <th>Note</th>
+            <th>Commentaire</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for review in flagged_reviews %}
+          <tr>
+            <td style="padding:14px 24px;font-weight:600;">{{ review.client.get_full_name }}</td>
+            <td style="color:var(--slate-500);">{{ review.reservation.service.provider.get_full_name }}</td>
+            <td>
+              <div style="color:#F59E0B;">
+                {% for i in "12345" %}
+                  {% if forloop.counter <= review.rating %}
+                    <i class="fas fa-star"></i>
+                  {% else %}
+                    <i class="far fa-star"></i>
+                  {% endif %}
+                {% endfor %}
+                <span style="margin-left:4px;color:var(--slate-500);">{{ review.rating }}/5</span>
+              </div>
+            </td>
+            <td>
+              <div style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                {{ review.comment|default:"Aucun commentaire"|truncatechars:50 }}
+              </div>
+            </td>
+            <td style="color:var(--slate-500);font-size:.82rem;">
+              {{ review.created_at|date:"d/m/Y" }}
+            </td>
+            <td>
+              {% if review.is_visible %}
+                <form method="POST" action="{% url 'moderate_review' pk=review.pk action='hide' %}" 
+                      style="display:inline;" onsubmit="return confirm('Cacher cet avis ?')">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm"
+                          style="background:rgba(220,38,38,.1);color:#dc2626;font-size:.75rem;
+                                 padding:5px 12px;border-radius:var(--radius-sm);font-weight:600;">
+                    <i class="fas fa-eye-slash me-1"></i>Masquer
+                  </button>
+                </form>
+              {% else %}
+                <form method="POST" action="{% url 'moderate_review' pk=review.pk action='show' %}" 
+                      style="display:inline;" onsubmit="return confirm('Afficher cet avis ?')">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-primary btn-sm"
+                          style="font-size:.75rem;padding:5px 12px;">
+                    <i class="fas fa-eye me-1"></i>Valider
+                  </button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
   <!-- ── Recent Activity ────────────────────────── -->
   <div class="row g-4">
     <div class="col-lg-8">
@@ -174,6 +261,14 @@
                 {{ r.service.provider.get_full_name }}
               </a>
             </div>
+            {% if is_admin_view %}
+            <div style="font-size:.75rem;color:var(--slate-300);margin-top:2px;">
+                <i class="fas fa-user me-1"></i>Client : 
+                <strong style="color:var(--slate-500);">
+                    {{ r.client.get_full_name }}
+                </strong>
+            </div>
+            {% endif %}
             <div style="font-size:.78rem;color:var(--slate-300);margin-top:3px;">
               <i class="far fa-clock me-1"></i>{{ r.date|date:"M j" }},
               {{ r.time_slot|time:"H:i" }}
@@ -184,33 +279,45 @@
 
           <!-- Status + action -->
           <div class="d-flex flex-column align-items-end gap-2">
-            {% if r.status == 'completed' %}
-              <span class="badge-completed">Completed</span>
-              {% if not r.review %}
-              <a href="{% url 'create_review' reservation_pk=r.pk %}"
-                 class="btn btn-outline-primary btn-sm" style="font-size:.75rem;padding:4px 12px;">
-                Write Review
-              </a>
-              {% endif %}
-            {% elif r.status == 'accepted' %}
-              <span class="badge-scheduled">Scheduled</span>
-              <a href="{% url 'reservation_detail' pk=r.pk %}"
-                 class="btn btn-outline-primary btn-sm" style="font-size:.75rem;padding:4px 12px;">
-                Reschedule
-              </a>
-            {% elif r.status == 'pending' %}
-              <span class="badge-pending">Pending</span>
-              <a href="{% url 'cancel_reservation' pk=r.pk %}"
-                 class="btn btn-sm"
-                 style="font-size:.75rem;padding:4px 12px;border-radius:var(--radius-sm);
-                        border:1.5px solid var(--border);color:var(--slate-500);font-weight:600;">
-                Cancel
-              </a>
+            {% if is_admin_view %}
+                <!-- Admin: show status badge + client and provider info, NO action buttons -->
+                <span class="badge-{{ r.status }}">{{ r.get_status_display }}</span>
+                <div style="font-size:.72rem;color:var(--slate-500);margin-top:4px;text-align:right;">
+                    Client: {{ r.client.get_full_name }}<br>
+                    Prestataire: {{ r.service.provider.get_full_name }}
+                </div>
             {% else %}
-              <span class="badge"
-                    style="background:var(--slate-100);color:var(--slate-500);">
-                {{ r.get_status_display }}
-              </span>
+                <!-- Normal client: existing logic unchanged -->
+                {% if r.status == 'completed' %}
+                    <span class="badge-completed">Completed</span>
+                    {% if not r.review %}
+                    <a href="{% url 'create_review' reservation_pk=r.pk %}"
+                       class="btn btn-outline-primary btn-sm" 
+                       style="font-size:.75rem;padding:4px 12px;">
+                        Write Review
+                    </a>
+                    {% endif %}
+                {% elif r.status == 'accepted' %}
+                    <span class="badge-scheduled">Scheduled</span>
+                    <a href="{% url 'reservation_detail' pk=r.pk %}"
+                       class="btn btn-outline-primary btn-sm" 
+                       style="font-size:.75rem;padding:4px 12px;">
+                        Reschedule
+                    </a>
+                {% elif r.status == 'pending' %}
+                    <span class="badge-pending">Pending</span>
+                    <a href="{% url 'cancel_reservation' pk=r.pk %}"
+                       class="btn btn-sm"
+                       style="font-size:.75rem;padding:4px 12px;border-radius:var(--radius-sm);
+                              border:1.5px solid var(--border);color:var(--slate-500);font-weight:600;">
+                        Cancel
+                    </a>
+                {% else %}
+                    <span class="badge"
+                          style="background:var(--slate-100);color:var(--slate-500);">
+                        {{ r.get_status_display }}
+                    </span>
+                {% endif %}
             {% endif %}
           </div>
         </div>

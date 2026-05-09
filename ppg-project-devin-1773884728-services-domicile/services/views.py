@@ -153,7 +153,7 @@ def service_list(request):
 def service_detail(request, pk):
     service = get_object_or_404(Service, pk=pk)
     from reviews.models import Review
-    reviews = Review.objects.filter(reservation__service=service)
+    reviews = Review.objects.filter(reservation__service=service, is_visible=True)
     availabilities = Availability.objects.filter(provider=service.provider, is_available=True)
     related_services = Service.objects.filter(
         category=service.category, is_active=True

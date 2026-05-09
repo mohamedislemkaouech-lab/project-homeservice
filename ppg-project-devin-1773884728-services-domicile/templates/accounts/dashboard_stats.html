@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block title %}Statistiques Administrateur{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrap">
+<div class="container">
+
+  <!-- Back button -->
+  <a href="{% url 'dashboard' %}" class="btn btn-outline-primary mb-4">
+    ← Retour au dashboard
+  </a>
+
+  <!-- Header -->
+  <div class="mb-4">
+    <span class="section-label">Administration</span>
+    <h1 style="font-size:2.6rem;margin:0;">Statistiques.</h1>
+  </div>
+
+  <!-- TOP ROW - 4 stat cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="dashboard-stat-card">
+        <span class="stat-number-label">01</span>
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <span class="stat-title">Clients total</span>
+        <div class="stat-number">{{ total_clients }}</div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="dashboard-stat-card">
+        <span class="stat-number-label">02</span>
+        <div class="stat-icon"><i class="fas fa-user-tie"></i></div>
+        <span class="stat-title">Prestataires total</span>
+        <div class="stat-number">{{ total_providers }}</div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="dashboard-stat-card">
+        <span class="stat-number-label">03</span>
+        <div class="stat-icon"><i class="fas fa-star"></i></div>
+        <span class="stat-title">Avis total</span>
+        <div class="stat-number">{{ total_reviews }}</div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="dashboard-stat-card">
+        <span class="stat-number-label">04</span>
+        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+        <span class="stat-title">Note moyenne /5</span>
+        <div class="stat-number">{{ avg_platform_rating|floatformat:1 }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECOND ROW - 2 cards side by side -->
+  <div class="row g-4 mb-4">
+    <!-- Left card: Réservations par statut -->
+    <div class="col-lg-6">
+      <div class="activity-card">
+        <div class="activity-header">
+          <span style="font-weight:700;font-size:.95rem;">
+            <i class="fas fa-chart-pie text-primary me-2"></i>
+            Réservations par statut
+          </span>
+        </div>
+        <div class="table-responsive">
+          <table class="table mb-0" style="font-size:.88rem;">
+            <thead style="background:var(--cream);">
+              <tr>
+                <th style="padding:12px 24px;">Statut</th>
+                <th>Nombre</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in reservations_by_status %}
+              <tr>
+                <td style="padding:14px 24px;font-weight:600;">
+                  {{ item.label }}
+                </td>
+                <td style="color:var(--slate-500);">
+                  {{ item.count }}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="2" style="text-align:center;padding:20px;color:var(--slate-500);">
+                  Aucune réservation
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right card: Top 5 Prestataires -->
+    <div class="col-lg-6">
+      <div class="activity-card">
+        <div class="activity-header">
+          <span style="font-weight:700;font-size:.95rem;">
+            <i class="fas fa-trophy text-warning me-2"></i>
+            Top 5 Prestataires
+          </span>
+        </div>
+        <div class="table-responsive">
+          <table class="table mb-0" style="font-size:.88rem;">
+            <thead style="background:var(--cream);">
+              <tr>
+                <th style="padding:12px 24px;">Nom</th>
+                <th>Note moyenne</th>
+                <th>Nombre d'avis</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for provider in top_providers %}
+              <tr>
+                <td style="padding:14px 24px;font-weight:600;">
+                  {{ provider.get_full_name|default:provider.username }}
+                </td>
+                <td style="color:#F59E0B;">
+                  ⭐ {{ provider.avg_rating|floatformat:1 }}
+                </td>
+                <td style="color:var(--slate-500);">
+                  {{ provider.review_count }}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="3" style="text-align:center;padding:20px;color:var(--slate-500);">
+                  Aucun prestataire avec avis
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THIRD ROW - 2 cards side by side -->
+  <div class="row g-4">
+    <!-- Left card: Top 5 Catégories -->
+    <div class="col-lg-6">
+      <div class="activity-card">
+        <div class="activity-header">
+          <span style="font-weight:700;font-size:.95rem;">
+            <i class="fas fa-tags text-info me-2"></i>
+            Top 5 Catégories
+          </span>
+        </div>
+        <div class="table-responsive">
+          <table class="table mb-0" style="font-size:.88rem;">
+            <thead style="background:var(--cream);">
+              <tr>
+                <th style="padding:12px 24px;">Catégorie</th>
+                <th>Réservations</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for category in top_categories %}
+              <tr>
+                <td style="padding:14px 24px;font-weight:600;">
+                  {{ category.name }}
+                </td>
+                <td style="color:var(--slate-500);">
+                  {{ category.booking_count }}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="2" style="text-align:center;padding:20px;color:var(--slate-500);">
+                  Aucune réservation
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right card: Activité mensuelle -->
+    <div class="col-lg-6">
+      <div class="activity-card">
+        <div class="activity-header">
+          <span style="font-weight:700;font-size:.95rem;">
+            <i class="fas fa-calendar-alt text-success me-2"></i>
+            Activité mensuelle
+          </span>
+        </div>
+        <div class="table-responsive">
+          <table class="table mb-0" style="font-size:.88rem;">
+            <thead style="background:var(--cream);">
+              <tr>
+                <th style="padding:12px 24px;">Mois</th>
+                <th>Réservations</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for month_data in monthly %}
+              <tr>
+                <td style="padding:14px 24px;font-weight:600;">
+                  {{ month_data.month|date:"F Y" }}
+                </td>
+                <td style="color:var(--slate-500);">
+                  {{ month_data.count }}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="2" style="text-align:center;padding:20px;color:var(--slate-500);">
+                  Aucune activité
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+{% endblock %}
