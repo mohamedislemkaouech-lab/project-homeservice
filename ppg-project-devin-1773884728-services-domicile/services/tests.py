@@ -9,6 +9,8 @@ class ServicesViewTests(TestCase):
         self.provider = User.objects.create_user(
             username='prov1', password='pw', role='prestataire'
         )
+        self.provider.verification_status = 'approved'
+        self.provider.save()
         self.client_user = User.objects.create_user(
             username='c_user', password='pw', role='client'
         )

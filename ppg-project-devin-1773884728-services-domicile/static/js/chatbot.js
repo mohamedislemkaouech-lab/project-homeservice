@@ -65,6 +65,22 @@
                 history.push({ role: "assistant", content: data.reply });
                 bubble(data.reply, "bot");
 
+                // Handle redirect type with action link
+                if (data.type === "redirect" && data.action) {
+                    var linkRow = document.createElement("div");
+                    linkRow.className = "cb-row cb-bot";
+                    var linkBubble = document.createElement("a");
+                    linkBubble.href = data.action.url;
+                    linkBubble.textContent = "→ " + data.action.label;
+                    linkBubble.style.cssText = 
+                        "display:inline-block;margin:4px 12px;padding:7px 18px;" +
+                        "background:var(--green-deep);color:#fff;border-radius:20px;" +
+                        "font-size:.85rem;font-weight:600;text-decoration:none;";
+                    linkRow.appendChild(linkBubble);
+                    msgs.appendChild(linkRow);
+                    msgs.scrollTop = msgs.scrollHeight;
+                }
+
                 // Show service cards if results exist
                 if (data.results && data.results.length > 0) {
                     renderCards(data.results);

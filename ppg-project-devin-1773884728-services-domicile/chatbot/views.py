@@ -30,6 +30,32 @@ class SearchAPIView(View):
             if not user_message:
                 return JsonResponse({"reply": "Comment puis-je vous aider ?"})
 
+            # ── 0. Special intent shortcuts ───────────────────────
+            SPECIAL_INTENTS = {
+                'voir tous les services': {
+                    "reply": "Voici tous nos services disponibles sur la plateforme.",
+                    "type": "redirect",
+                    "results": [],
+                    "action": {"type": "link", 
+                               "label": "Voir tous les services",
+                               "url": "/services/"},
+                    "quick_replies": self._default_quick_replies()
+                },
+                'tous les services': {
+                    "reply": "Voici tous nos services disponibles sur la plateforme.",
+                    "type": "redirect", 
+                    "results": [],
+                    "action": {"type": "link",
+                               "label": "Voir tous les services", 
+                               "url": "/services/"},
+                    "quick_replies": self._default_quick_replies()
+                },
+            }
+            
+            msg_lower_stripped = user_message.lower().strip()
+            if msg_lower_stripped in SPECIAL_INTENTS:
+                return JsonResponse(SPECIAL_INTENTS[msg_lower_stripped])
+
             # ── 1. FAQ check first ─────────────────────────────────────────
             faq_reply = self._check_faq(user_message)
             if faq_reply:
@@ -42,23 +68,41 @@ class SearchAPIView(View):
 
             # ── 2. Service NLP search ──────────────────────────────────────
             filters = self.parser.parse(user_message)
-            services = Service.objects.filter(is_active=True).select_related('provider', 'category')
-
-            if filters.get('service'):
-                services = services.filter(category__name__icontains=filters['service'])
-
-            results_count = services.count()
-            services = services[:3]
-
-            if not services.exists():
+            service_query = filters.get('service')
+            
+            # If no service category detected at all, don't search
+            if not service_query:
                 return JsonResponse({
-                    "reply": "Désolé, je n'ai trouvé aucun prestataire disponible pour votre recherche.",
-                    "type": "no_results",
-                    "filters_applied": filters,
+                    "reply": "Je n'ai pas bien compris votre demande. "
+                             "Essayez de préciser le type de service recherché, "
+                             "par exemple : \"plombier\", \"ménage\", "
+                             "\"baby-sitter\", \"électricien\"...",
+                    "type": "no_category",
                     "results": [],
                     "quick_replies": self._default_quick_replies()
                 })
-
+            
+            # Only search if we have a category
+            services = Service.objects.filter(is_active=True).select_related(
+                'provider', 'category'
+            )
+            services = services.filter(
+                category__name__icontains=service_query
+            )
+            
+            results_count = services.count()
+            services = services[:3]
+            
+            if not services.exists():
+                return JsonResponse({
+                    "reply": f"Désolé, je n'ai trouvé aucun prestataire "
+                             f"disponible pour \"{service_query}\" "
+                             f"pour le moment.",
+                    "type": "no_results",
+                    "results": [],
+                    "quick_replies": self._default_quick_replies()
+                })
+            
             results = []
             for s in services:
                 results.append({
@@ -66,12 +110,14 @@ class SearchAPIView(View):
                     "service_title": s.title,
                     "price": f"{s.price} DT",
                     "url": reverse('service_detail', kwargs={'pk': s.pk}),
-                    "book_url": reverse('create_reservation', kwargs={'service_pk': s.pk}),
+                    "book_url": reverse('create_reservation', 
+                                       kwargs={'service_pk': s.pk}),
                 })
-
-            service_label = filters.get('service') or 'services'
-            reply_text = f"J'ai trouvé {results_count} prestataire(s) pour : {service_label}"
-
+            
+            service_label = service_query
+            reply_text = (f"J'ai trouvé {results_count} prestataire(s) "
+                          f"pour : {service_label}")
+            
             return JsonResponse({
                 "reply": reply_text,
                 "type": "services",

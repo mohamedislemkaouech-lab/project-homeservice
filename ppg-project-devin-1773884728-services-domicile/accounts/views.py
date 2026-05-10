@@ -223,3 +223,7 @@ def admin_stats(request):
     
     return render(request, 'accounts/dashboard_stats.html', context)
 
+
+def how_it_works(request):
+    return render(request, 'how_it_works.html')
+

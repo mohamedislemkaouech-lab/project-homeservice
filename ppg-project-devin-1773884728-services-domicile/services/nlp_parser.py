@@ -13,7 +13,7 @@ class BookingQueryParser:
             'Électricité': ['électricien', 'courant', 'prise', 'ampoule', 'disjoncteur', 'lumière', 'panne électrique'],
             'Jardinage': ['jardinier', 'tonte', 'gazon', 'plante', 'arbre', 'taille', 'arrosage'],
             'Ménage': ['femme de ménage', 'nettoyage', 'propre', 'vitres', 'poussière', 'sol', 'ménage'],
-            'Baby-sitting': ['nounou', 'baby sitter', 'baby-sitter', 'enfant', 'garde', 'bébé'],
+            'Baby-sitting': ['nounou', 'baby sitter', 'baby-sitter', 'babysitter', 'enfant', 'garde', 'bébé', 'baby-sitting', 'babysitting', 'baby sitting'],
             'Déménagement': ['déménageur', 'carton', 'camion', 'transporter', 'meuble'],
             'Climatisation': ['clim', 'climatiseur', 'gaz', 'fuite clim', 'froid', 'chaud', 'chauffage'],
             'Peinture': ['peintre', 'peinture', 'mur', 'plafond', 'couleur', 'pinceau']
@@ -31,6 +31,42 @@ class BookingQueryParser:
     
     def parse(self, user_input: str) -> dict:
         user_input_lower = user_input.lower()
+        
+        # Direct category name match — highest priority
+        DIRECT_TRIGGERS = {
+            'baby-sitting':  'Baby-sitting',
+            'babysitting':   'Baby-sitting',
+            'baby sitting':  'Baby-sitting',
+            'plomberie':     'Plomberie',
+            'plombier':      'Plomberie',
+            'électricité':   'Électricité',
+            'electricite':   'Électricité',
+            'électricien':   'Électricité',
+            'electricien':   'Électricité',
+            'ménage':        'Ménage',
+            'menage':        'Ménage',
+            'nettoyage':     'Ménage',
+            'jardinage':     'Jardinage',
+            'jardinier':     'Jardinage',
+            'peinture':      'Peinture',
+            'peintre':       'Peinture',
+            'déménagement':  'Déménagement',
+            'demenagement':  'Déménagement',
+            'climatisation': 'Climatisation',
+            'clim':          'Climatisation',
+        }
+        msg_stripped = user_input_lower.strip()
+        if msg_stripped in DIRECT_TRIGGERS:
+            result = {
+                'service': DIRECT_TRIGGERS[msg_stripped],
+                'date_min': None,
+                'date_max': None,
+                'urgency': 'normal',
+                'time_preference': None,
+                'keywords': [msg_stripped],
+                'confidence': 1.0
+            }
+            return result
         
         result = {
             'service': None,
@@ -141,6 +177,21 @@ class BookingQueryParser:
                 result['urgency'] = llm_result.get('urgency', 'normal')
                 result['time_preference'] = llm_result.get('time_preference')
                 result['confidence'] = 0.9
+                
+        # Normalize category name to match DB exactly
+        CATEGORY_MAP = {
+            'Plomberie':    'Plomberie',
+            'Électricité':  'Électricité', 
+            'Jardinage':    'Jardinage',
+            'Ménage':       'Ménage',
+            'Baby-sitting': 'Baby-sitting',
+            'Déménagement': 'Déménagement',
+            'Climatisation':'Climatisation',
+            'Peinture':     'Peinture',
+        }
+        if result['service']:
+            result['service'] = CATEGORY_MAP.get(result['service'], 
+                                                  result['service'])
                 
         return result
 

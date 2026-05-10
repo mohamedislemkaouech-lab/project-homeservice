@@ -10,6 +10,15 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="{% static 'css/style.css' %}" rel="stylesheet">
   {% block extra_css %}{% endblock %}
+<style>
+  .btn-nav-cta:hover {
+    background: #1B4D3E !important;
+    color: #ffffff !important;
+    border-color: #1B4D3E !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 14px rgba(27,77,62,0.25) !important;
+  }
+</style>
 </head>
 <body>
 
@@ -38,7 +47,8 @@
              href="{% url 'service_list' %}">Browse Services</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">How it Works</a>
+          <a class="nav-link {% if request.resolver_match.url_name == 'how_it_works' %}active{% endif %}"
+           href="{% url 'how_it_works' %}">How it Works</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{% url 'register_prestataire' %}">Become a Pro</a>
@@ -76,7 +86,20 @@
             <a class="nav-link" href="{% url 'login' %}">Sign In</a>
           </li>
           <li class="nav-item">
-            <a class="btn-nav-cta nav-link" href="{% url 'register_choice' %}">Post a Request</a>
+            <a class="btn-nav-cta nav-link" 
+       href="{% url 'register_choice' %}"
+       style="background: #ffffff !important;
+              color: #1B4D3E !important;
+              border: 2px solid #1B4D3E !important;
+              border-radius: 100px !important;
+              padding: 9px 22px !important;
+              font-weight: 700 !important;
+              font-size: 0.88rem !important;
+              letter-spacing: 0.02em !important;
+              box-shadow: 0 2px 8px rgba(27,77,62,0.15) !important;
+              transition: all 0.25s ease !important;">
+        Post a Request
+    </a>
           </li>
         {% endif %}
       </ul>
