@@ -6,46 +6,41 @@
 {% block extra_css %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@300;400;500;600;700&display=swap');
-
-/* ── Register Form — Purple Theme ── */
+/* ── Register Form — Green & Beige Theme ── */
 
 body {
   background: linear-gradient(
     135deg,
-    #F5F3FF 0%,
-    #EDE9FE 50%,
-    #F5F3FF 100%
+    #F7F5F0 0%,
+    #EEF5F1 50%,
+    #F7F5F0 100%
   ) !important;
-  font-family: 'Epilogue', sans-serif !important;
 }
 
 /* Card */
 .card {
   background: #FFFFFF !important;
-  border: 1.5px solid #DDD6FE !important;
-  border-top: 4px solid #7C3AED !important;
+  border: 1.5px solid #D8E6E1 !important;
+  border-top: 4px solid #1B4D3E !important;
   border-radius: 12px !important;
-  box-shadow: 0 8px 32px rgba(124, 58, 237, 0.10) !important;
+  box-shadow: 0 8px 32px rgba(27, 77, 62, 0.10) !important;
 }
 
 /* Card title */
 .card-body h3 {
-  color: #4C1D95 !important;
-  font-family: 'Epilogue', sans-serif !important;
+  color: #1B4D3E !important;
   font-weight: 700 !important;
   letter-spacing: -0.02em !important;
 }
 
 .card-body h3 i.text-primary,
 .card-body h3 i.text-success {
-  color: #7C3AED !important;
+  color: #2D6A56 !important;
 }
 
 /* Form labels */
 .card-body .form-label.fw-semibold {
-  color: #4C1D95 !important;
-  font-family: 'Epilogue', sans-serif !important;
+  color: #1B4D3E !important;
   font-weight: 600 !important;
   font-size: 0.88rem !important;
 }
@@ -53,38 +48,37 @@ body {
 /* Inputs */
 .card-body .form-control {
   background: #FFFFFF !important;
-  border: 1.5px solid #DDD6FE !important;
+  border: 1.5px solid #D8E6E1 !important;
   border-radius: 8px !important;
-  color: #4C1D95 !important;
-  font-family: 'Epilogue', sans-serif !important;
+  color: #2C3E35 !important;
   padding: 10px 14px !important;
 }
 
 .card-body .form-control:hover {
-  border-color: #7C3AED !important;
+  border-color: #2D6A56 !important;
 }
 
 .card-body .form-control:focus {
-  border-color: #7C3AED !important;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15) !important;
+  border-color: #1B4D3E !important;
+  box-shadow: 0 0 0 3px rgba(27, 77, 62, 0.12) !important;
   background: #FFFFFF !important;
 }
 
 .card-body .form-control::placeholder {
-  color: #A78BFA !important;
-  opacity: 0.7 !important;
+  color: #A8BDB6 !important;
+  opacity: 0.9 !important;
 }
 
 /* File input */
 .card-body .form-control[type="file"] {
-  background: #F5F3FF !important;
-  border-color: #DDD6FE !important;
+  background: #F7F5F0 !important;
+  border-color: #D8E6E1 !important;
 }
 
 /* Select dropdowns */
 .card-body select.form-control {
   background: #FFFFFF !important;
-  color: #4C1D95 !important;
+  color: #2C3E35 !important;
 }
 
 /* Textarea */
@@ -95,113 +89,108 @@ body {
 
 /* Helper text */
 .form-text {
-  color: #6D28D9 !important;
-  font-family: 'Epilogue', sans-serif !important;
+  color: #4A9478 !important;
   font-size: 0.8rem !important;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 /* Submit button — client */
 .card-body .btn-primary {
-  background: #4C1D95 !important;
-  border-color: #4C1D95 !important;
+  background: #1B4D3E !important;
+  border-color: #1B4D3E !important;
   color: #ffffff !important;
   border-radius: 10px !important;
   padding: 11px 28px !important;
-  font-family: 'Epilogue', sans-serif !important;
   font-weight: 600 !important;
   font-size: 1rem !important;
   letter-spacing: 0.01em !important;
   transition: all 0.25s ease !important;
-  box-shadow: 0 4px 14px rgba(76, 29, 149, 0.25) !important;
+  box-shadow: 0 4px 14px rgba(27, 77, 62, 0.25) !important;
 }
 
 .card-body .btn-primary:hover {
-  background: #7C3AED !important;
-  border-color: #7C3AED !important;
+  background: #2D6A56 !important;
+  border-color: #2D6A56 !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35) !important;
+  box-shadow: 0 8px 24px rgba(27, 77, 62, 0.35) !important;
 }
 
 .card-body .btn-primary:active {
   transform: translateY(0px) !important;
-  background: #4C1D95 !important;
+  background: #1B4D3E !important;
 }
 
 /* Submit button — prestataire */
 .card-body .btn-success {
-  background: #4C1D95 !important;
-  border-color: #4C1D95 !important;
+  background: #1B4D3E !important;
+  border-color: #1B4D3E !important;
   color: #ffffff !important;
   border-radius: 10px !important;
   padding: 11px 28px !important;
-  font-family: 'Epilogue', sans-serif !important;
   font-weight: 600 !important;
   font-size: 1rem !important;
   letter-spacing: 0.01em !important;
   transition: all 0.25s ease !important;
-  box-shadow: 0 4px 14px rgba(76, 29, 149, 0.25) !important;
+  box-shadow: 0 4px 14px rgba(27, 77, 62, 0.25) !important;
 }
 
 .card-body .btn-success:hover {
-  background: #7C3AED !important;
-  border-color: #7C3AED !important;
+  background: #2D6A56 !important;
+  border-color: #2D6A56 !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35) !important;
+  box-shadow: 0 8px 24px rgba(27, 77, 62, 0.35) !important;
 }
 
 .card-body .btn-success:active {
   transform: translateY(0px) !important;
-  background: #4C1D95 !important;
+  background: #1B4D3E !important;
 }
 
 /* Links */
 .card-body a {
-  color: #4C1D95 !important;
+  color: #1B4D3E !important;
   font-weight: 600 !important;
-  font-family: 'Epilogue', sans-serif !important;
 }
 
 .card-body a:hover {
-  color: #7C3AED !important;
+  color: #2D6A56 !important;
 }
 
 .card-body p a {
-  color: #7C3AED !important;
+  color: #2D6A56 !important;
   text-decoration: underline !important;
   text-underline-offset: 3px !important;
 }
 
 .card-body p a:hover {
-  color: #4C1D95 !important;
+  color: #1B4D3E !important;
 }
 
 /* Map locate button */
 #locate-btn {
-  background: #4C1D95 !important;
-  border-color: #4C1D95 !important;
+  background: #1B4D3E !important;
+  border-color: #1B4D3E !important;
   color: #ffffff !important;
   border-radius: 8px !important;
-  font-family: 'Epilogue', sans-serif !important;
   font-weight: 600 !important;
   transition: all 0.25s ease !important;
 }
 
 #locate-btn:hover {
-  background: #7C3AED !important;
-  border-color: #7C3AED !important;
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3) !important;
+  background: #2D6A56 !important;
+  border-color: #2D6A56 !important;
+  box-shadow: 0 4px 14px rgba(27, 77, 62, 0.3) !important;
 }
 
 /* Map border */
 #map {
-  border-color: #DDD6FE !important;
+  border-color: #D8E6E1 !important;
   border-radius: 8px !important;
 }
 
 /* Map container */
 .map-container {
-  background: #F5F3FF !important;
+  background: #F7F5F0 !important;
   border-radius: 8px !important;
 }
 
@@ -209,28 +198,27 @@ body {
 .fa-user,
 .fa-hard-hat,
 .fa-map-marked-alt {
-  color: #7C3AED !important;
+  color: #2D6A56 !important;
 }
 
 /* Checkbox */
 .card-body .form-check-input:checked {
-  background-color: #7C3AED !important;
-  border-color: #7C3AED !important;
+  background-color: #1B4D3E !important;
+  border-color: #1B4D3E !important;
 }
 
 /* Error messages */
 .card-body .text-danger {
   color: #DC2626 !important;
   font-size: 0.8rem !important;
-  font-family: 'Epilogue', sans-serif !important;
 }
 
 /* Badge */
 .card-body .badge {
-  background: #4C1D95 !important;
+  background: #1B4D3E !important;
 }
 
-/* Existing map styles (preserved) */
+/* Map styles */
 .map-wrapper {
     max-width: 500px;
     margin: 0 auto 15px auto;
@@ -240,12 +228,12 @@ body {
     width: 100%;
     border-radius: 12px;
     margin-bottom: 15px;
-    border: 2px solid #e9ecef;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: 2px solid #D8E6E1;
+    box-shadow: 0 2px 8px rgba(27,77,62,0.1);
 }
 .map-container {
     position: relative;
-    background: #f8f9fa;
+    background: #F7F5F0;
     border-radius: 12px;
     padding: 8px;
     margin-bottom: 15px;
@@ -256,11 +244,11 @@ body {
     right: 18px;
     z-index: 1000;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 4px rgba(27,77,62,0.2);
 }
 .address-display {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
+    background: #F7F5F0;
+    border: 1px solid #D8E6E1;
     border-radius: 8px;
 }
 </style>

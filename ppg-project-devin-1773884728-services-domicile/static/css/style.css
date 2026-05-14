@@ -272,6 +272,10 @@ a:hover { color: var(--green-mid); }
   background: var(--white);
   border-bottom: 1px solid var(--border);
   padding: 0;
+  position: sticky;
+  top: 65px; /* sits just below the sticky navbar */
+  z-index: 900;
+  box-shadow: 0 2px 8px rgba(27,77,62,.06);
 }
 
 .category-icon-item {
