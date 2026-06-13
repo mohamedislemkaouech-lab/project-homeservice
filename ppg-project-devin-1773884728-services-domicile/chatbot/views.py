@@ -50,6 +50,33 @@ class SearchAPIView(View):
                                "url": "/services/"},
                     "quick_replies": self._default_quick_replies()
                 },
+                'annuler une réservation': {
+                    "reply": "Vous pouvez annuler une réservation en attente depuis votre tableau de bord. Allez dans \"Mes réservations\" et cliquez sur \"Annuler\".",
+                    "type": "redirect",
+                    "results": [],
+                    "action": {"type": "link",
+                               "label": "Mes réservations",
+                               "url": "/reservations/my/"},
+                    "quick_replies": self._default_quick_replies()
+                },
+                'comment ça marche ?': {
+                    "reply": "Notre plateforme permet de mettre en relation des particuliers avec des prestataires de services à domicile. Recherchez un service, consultez les profils et réservez en ligne !",
+                    "type": "redirect",
+                    "results": [],
+                    "action": {"type": "link",
+                               "label": "Comment ça marche",
+                               "url": "/accounts/how-it-works/"},
+                    "quick_replies": self._default_quick_replies()
+                },
+                'comment ça marche': {
+                    "reply": "Notre plateforme permet de mettre en relation des particuliers avec des prestataires de services à domicile. Recherchez un service, consultez les profils et réservez en ligne !",
+                    "type": "redirect",
+                    "results": [],
+                    "action": {"type": "link",
+                               "label": "Comment ça marche",
+                               "url": "/accounts/how-it-works/"},
+                    "quick_replies": self._default_quick_replies()
+                },
             }
             
             msg_lower_stripped = user_message.lower().strip()
