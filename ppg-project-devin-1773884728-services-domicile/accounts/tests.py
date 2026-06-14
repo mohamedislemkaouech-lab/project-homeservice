@@ -105,3 +105,10 @@ class AccountsViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.user_client.refresh_from_db()
         self.assertEqual(self.user_client.first_name, 'Updated')
+
+    def test_register_choice_view(self):
+        url = reverse('register_choice')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Je suis un Client')
+        self.assertContains(response, 'Je suis un Prestataire')

@@ -305,6 +305,7 @@ document.addEventListener("DOMContentLoaded", function () {
         cardBtn.href          = `/services/category/${data.id}/prestataires/`;
         serviceCard.classList.remove("d-none");
         serviceCard.style.opacity = 0;
+        serviceCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
         setTimeout(() => {
           serviceCard.style.transition = "opacity .35s ease";
           serviceCard.style.opacity = 1;

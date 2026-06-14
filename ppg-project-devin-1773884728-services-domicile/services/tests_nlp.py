@@ -46,3 +46,13 @@ class NLPBookingQueryParserTests(TestCase):
         self.assertEqual(result['service'], 'Jardinage')
         self.assertIsNotNone(result['date_min'])
         self.assertEqual(result['date_min'].weekday(), 5) # 5 is Saturday
+
+    def test_parser_keyword_expansions_and_normalization(self):
+        self.assertEqual(self.parser.parse("fuite d'eau")['service'], 'Plomberie')
+        self.assertEqual(self.parser.parse("probleme eau")['service'], 'Plomberie')
+        self.assertEqual(self.parser.parse("maison sale")['service'], 'Ménage')
+        self.assertEqual(self.parser.parse("appartement sale")['service'], 'Ménage')
+        self.assertEqual(self.parser.parse("ma maison est sale")['service'], 'Ménage')
+        self.assertEqual(self.parser.parse("nettoyer la maison")['service'], 'Ménage')
+        self.assertEqual(self.parser.parse("enfant a garder")['service'], 'Baby-sitting')
+        self.assertEqual(self.parser.parse("lumiere prise courant")['service'], 'Électricité')

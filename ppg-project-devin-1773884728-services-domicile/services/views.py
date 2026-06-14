@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
 from django.http import JsonResponse
+from django.conf import settings
+from pathlib import Path
 from .models import Service, Category, Availability
 from .forms import ServiceForm, AvailabilityForm
 from accounts.models import User
@@ -27,12 +29,17 @@ def haversine_distance(lat1, lon1, lat2, lon2):
 
 def category_api(request, pk):
     category = get_object_or_404(Category, pk=pk)
-    # Use category image if available, else a stylized stock photo URL
+    # Use category image if available, else a local static fallback or a stylized stock photo URL
     if category.image:
         image_url = category.image.url
     else:
-        image_url = f"https://source.unsplash.com/600x400/?{category.name.lower().replace(' ', ',')},service"
-    
+        static_image_name = category.name.lower().replace('é', 'e').replace('è', 'e').replace(' ', '_') + '.jpg'
+        static_image_path = Path(settings.BASE_DIR) / 'static' / 'images' / static_image_name
+        if static_image_path.exists():
+            image_url = f"/static/images/{static_image_name}"
+        else:
+            image_url = f"https://source.unsplash.com/600x400/?{category.name.lower().replace(' ', ',')},service"
+
     desc = category.description
     if not desc:
         desc = f"Découvrez nos professionnels qualifiés pour vos besoins en {category.name.lower()}. Des experts de confiance, sélectionnés pour vous offrir un service de qualité à domicile."

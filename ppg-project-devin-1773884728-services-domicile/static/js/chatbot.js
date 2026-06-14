@@ -148,17 +148,24 @@
                 <div style="color:#64748b;margin-bottom:6px;">
                     <i class="fas fa-user" style="font-size:11px;margin-right:4px;"></i>${res.provider_name}
                     &nbsp;·&nbsp;
-                    <span style="background:#f1f5f9;padding:1px 7px;border-radius:10px;font-size:0.78rem;">${res.price}</span>
+                    <span style="background:#f1f5f9;padding:1px 7px;border-radius:10px;font-size:0.78rem;">${res.price_display || res.price}</span>
                 </div>
                 <div style="display:flex;gap:6px;">
                     <a href="${res.url}"
                        style="flex:1;text-align:center;padding:5px 0;border:1px solid #3B82F6;border-radius:7px;color:#3B82F6;text-decoration:none;font-size:0.8rem;">
                         Détails
                     </a>
-                    <a href="${res.book_url}"
-                       style="flex:1;text-align:center;padding:5px 0;background:#3B82F6;border-radius:7px;color:#fff;text-decoration:none;font-size:0.8rem;">
-                        Réserver
-                    </a>
+                    ${res.login_required ? `
+                        <a href="${res.login_url}"
+                           style="flex:1;text-align:center;padding:5px 0;background:#f97316;border-radius:7px;color:#fff;text-decoration:none;font-size:0.8rem;">
+                            ${res.login_message || 'Connectez-vous pour réserver'}
+                        </a>
+                    ` : `
+                        <a href="${res.book_url}"
+                           style="flex:1;text-align:center;padding:5px 0;background:#3B82F6;border-radius:7px;color:#fff;text-decoration:none;font-size:0.8rem;">
+                            Réserver
+                        </a>
+                    `}
                 </div>
             </div>`;
         });

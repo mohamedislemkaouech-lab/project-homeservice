@@ -7,7 +7,19 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load .env file if present
+ENV_PATH = BASE_DIR / '.env'
+if ENV_PATH.exists():
+    for line in ENV_PATH.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        if '=' in line:
+            key, value = line.split('=', 1)
+            os.environ.setdefault(key.strip(), value.strip())
+
 # API Keys
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
 SECRET_KEY = 'django-insecure-n@+p_y9776=a22f#@#fhv3(issrkmd^ht(o8)nf*l_f!=y6^vr'
 
